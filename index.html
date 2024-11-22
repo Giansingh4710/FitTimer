@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitTrack - A Personal iOS Journey</title>
+    <style>
+      :root {
+        --primary: #1a1a1a;
+        --secondary: #333333;
+        --accent: #666666;
+        --light: #f8f8f8;
+        --white: #ffffff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6;
+        color: var(--primary);
+        background-color: var(--white);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .hero {
+        background: var(--white);
+        color: var(--primary);
+        padding: 4rem 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(26, 26, 26, 0.02) 0%,
+          rgba(26, 26, 26, 0) 100%
+        );
+        z-index: 1;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 85%;
+        margin: 0 auto;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        margin-bottom: 1rem;
+        font-weight: 700;
+        letter-spacing: -1px;
+      }
+
+      .hero p {
+        font-size: clamp(1rem, 4vw, 1.2rem);
+        max-width: 600px;
+        margin: 0 auto;
+        color: var(--accent);
+      }
+
+      .key-points,
+      .journey {
+        padding: 4rem 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+        background: var(--white);
+      }
+
+      .key-points h2,
+      .journey h2 {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        margin-bottom: 3rem;
+        color: var(--primary);
+        letter-spacing: -0.5px;
+      }
+
+      .points-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        padding: 0 1rem;
+      }
+
+      .point-item {
+        padding: 2rem 1.5rem;
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .point-item:hover {
+        transform: translateY(-5px);
+      }
+
+      .point-item svg {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 1rem;
+        fill: var(--primary);
+      }
+
+      .point-item h3 {
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        font-size: 1.25rem;
+      }
+
+      .point-item p {
+        color: var(--accent);
+        font-size: 0.95rem;
+      }
+
+      .highlight {
+        background: var(--light);
+        padding: 4rem 1.5rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .highlight-content {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .highlight h2 {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        margin-bottom: 1.5rem;
+        color: var(--primary);
+        letter-spacing: -0.5px;
+      }
+
+      .highlight-points {
+        display: grid;
+        gap: 1rem;
+        text-align: left;
+        margin-top: 2rem;
+      }
+
+      .highlight-point {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--white);
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .highlight-point span {
+        color: var(--accent);
+        font-size: 0.95rem;
+      }
+
+      .journey-content {
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: left;
+        background: var(--white);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .journey-point {
+        margin-bottom: 1.5rem;
+        padding-left: 1.5rem;
+        border-left: 2px solid var(--accent);
+      }
+
+      .journey-point h3 {
+        color: var(--primary);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .journey-point p {
+        color: var(--accent);
+        font-size: 0.95rem;
+      }
+
+      .download-section {
+        background: var(--light);
+        padding: 4rem 1.5rem;
+        text-align: center;
+      }
+
+      .download-content {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .download-btn {
+        display: inline-block;
+        background: var(--primary);
+        color: var(--white);
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 2rem;
+        transition: transform 0.3s ease;
+      }
+
+      .download-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      footer {
+        background: var(--white);
+        color: var(--accent);
+        text-align: center;
+        padding: 2rem 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      @media (max-width: 768px) {
+        .points-grid {
+          grid-template-columns: 1fr;
+          padding: 0;
+        }
+
+        .point-item {
+          padding: 1.5rem;
+        }
+
+        .highlight-point {
+          padding: 0.75rem;
+        }
+
+        .journey-content {
+          padding: 1.5rem;
+        }
+      }
+
+      .code-preview {
+        position: relative;
+        background: #1e1e1e;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        font-family: "JetBrains Mono", "Fira Code", "Menlo", monospace;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .code-preview-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 0.75rem 1rem;
+        background: #2d2d2d;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .run-button {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .run-button:hover {
+        background: #45a049;
+        transform: translateY(-1px);
+      }
+
+      .code-content {
+        margin-top: 3rem;
+        color: #d4d4d4;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        overflow: scroll;
+        width: 100vw;
+      }
+
+      .code-line {
+        display: block;
+        padding: 0.25rem 0;
+        align-self: left;
+      }
+
+      .code-ident {
+        padding-left: 2rem;
+      }
+
+      .code-ident2 {
+        padding-left: 4rem;
+      }
+
+      .code-comment {
+        color: #6a9955;
+      }
+
+      .code-keyword {
+        color: #569cd6;
+      }
+
+      .code-function {
+        color: #dcdcaa;
+      }
+
+      .code-string {
+        color: #ce9178;
+      }
+
+      .code-boolean {
+        color: #569cd6;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>FitTrack</h1>
+        <p>A simple fitness companion for your home workout journey</p>
+      </div>
+    </section>
+
+    <section class="journey">
+      <h2>My Journey</h2>
+      <div class="journey-content">
+        <div class="journey-point">
+          <h3>Learning Swift</h3>
+          <p>
+            This app represents my first steps into iOS development. As someone
+            new to Swift, I wanted to create something meaningful while
+            learning.
+          </p>
+        </div>
+        <div class="journey-point">
+          <h3>A Different Approach</h3>
+          <p>
+            I'm not a fitness expert or gym enthusiast. Just someone who wanted
+            to move more and stay active at home. This app reflects that simple,
+            pressure-free approach.
+          </p>
+        </div>
+        <div class="journey-point">
+          <h3>Keep It Simple</h3>
+          <p>
+            Instead of complex tracking or strict routines, FitTrack focuses on
+            the basics - like counting push-ups or following along with workout
+            videos.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="key-points">
+      <h2>Keep It Simple</h2>
+      <div class="points-grid">
+        <div class="point-item">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"
+            />
+          </svg>
+          <h3>No Experience Needed</h3>
+          <p>Perfect for beginners starting their fitness journey</p>
+        </div>
+        <div class="point-item">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"
+            />
+          </svg>
+          <h3>Workout Anywhere</h3>
+          <p>No gym required - just you and your space</p>
+        </div>
+        <div class="point-item">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"
+            />
+          </svg>
+          <h3>Track Progress</h3>
+          <p>Count your daily push-ups and celebrate small wins</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="highlight">
+      <div class="highlight-content">
+        <h2>Built Different</h2>
+        <div class="highlight-points">
+          <div class="highlight-point">
+            <span>✨ Made while learning Swift & iOS development</span>
+          </div>
+          <div class="highlight-point">
+            <span>🏃‍♂️ Focus on movement, not perfection</span>
+          </div>
+          <div class="highlight-point">
+            <span>📱 Simple interface for quick workouts</span>
+          </div>
+          <div class="highlight-point">
+            <span>🎯 Track what matters to you</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section">
+      <div class="download-content">
+        <h2>Get Moving Today</h2>
+        <p>Start your simple fitness journey with FitTrack</p>
+
+        <div class="code-preview">
+          <div class="code-preview-header">
+            <button
+              class="run-button"
+              onclick="window.location.href='https://apps.apple.com/app/fittrack'"
+            >
+              <span>Run</span>
+              <span>▶</span>
+            </button>
+          </div>
+          <div class="code-content">
+            <span class="code-line code-comment"
+              >// Initialize fitness journey</span
+            >
+            <span class="code-line"
+              ><span class="code-keyword">function</span>
+              <span class="code-function">startHealthyLifestyle</span>() {</span
+            >
+            <span class="code-line code-ident">
+              <span class="code-keyword">const</span> motivation =
+              <span class="code-boolean">true</span>;</span
+            >
+            <span class="code-line code-ident">
+              <span class="code-keyword">if</span> (motivation) {</span
+            >
+            <span class="code-line code-ident2">
+              <span class="code-function">downloadFitTrack</span>();</span
+            >
+            <span class="code-line code-ident2">
+              <span class="code-function">beginJourney</span>(<span
+                class="code-string"
+                >'fitness'</span
+              >);</span
+            >
+            <span class="code-line code-ident"> }</span>
+            <span class="code-line">}</span>
+          </div>
+        </div>
+        <a href="https://apps.apple.com/app/fittrack" class="download-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path
+              d="M22 17.607c-.786 2.28-3.139 6.317-5.563 6.361-1.608.031-2.125-.953-3.963-.953-1.837 0-2.412.923-3.932.983-2.572.099-6.542-5.827-6.542-10.995 0-4.747 3.308-7.1 6.198-7.143 1.55-.028 3.014 1.045 3.959 1.045.949 0 2.727-1.29 4.596-1.101.782.033 2.979.315 4.389 2.377-3.741 2.442-3.158 7.549.858 9.426zm-5.222-17.607c-2.826.114-5.132 3.079-4.81 5.531 2.612.203 5.118-2.725 4.81-5.531z"
+            />
+          </svg>
+          Download on App Store</a
+        >
+      </div>
+    </section>
+
+    <footer>
+      <p>Built with Swift, powered by passion</p>
+    </footer>
+  </body>
+</html>

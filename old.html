@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitTimer for iOS</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #0066ff;
+        --text: #2c2c2c;
+        --text-light: #6b6b6b;
+        --bg: #ffffff;
+        --bg-light: #f8f9fa;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        line-height: 1.6;
+        color: var(--text);
+      }
+
+      .hero {
+        display: flex;
+        justify-content: center;
+        min-height: 85vh;
+        background: var(--bg-light);
+      }
+
+      .hero-content {
+        max-width: 800px;
+        padding: 4rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .hero h1 {
+        font-size: 3.5rem;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        margin-bottom: 1.5rem;
+        line-height: 1.1;
+      }
+
+      .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-light);
+        margin-bottom: 2rem;
+        max-width: 500px;
+      }
+
+      .app-badge {
+        width: 140px;
+        margin-bottom: 2rem;
+      }
+
+      .tech-stack {
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--bg);
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .tech-stack span {
+        font-size: 0.9rem;
+        color: var(--text-light);
+      }
+
+      .features {
+        padding: 4rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 3rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .feature {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .feature svg {
+        width: 32px;
+        height: 32px;
+        color: var(--primary);
+      }
+
+      .feature h3 {
+        font-size: 1.25rem;
+        font-weight: 500;
+      }
+
+      .feature p {
+        color: var(--text-light);
+        font-size: 1rem;
+      }
+
+      .development-story {
+        background: var(--bg-light);
+        padding: 4rem;
+        text-align: center;
+      }
+
+      .development-story h2 {
+        font-size: 2rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+      }
+
+      .development-story p {
+        max-width: 600px;
+        margin: 0 auto 1rem;
+        color: var(--text-light);
+      }
+
+      .tech-highlight {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-light);
+      }
+
+      .tech-highlight svg {
+        color: var(--primary);
+      }
+
+      .code-preview {
+        position: relative;
+        background: #1e1e1e;
+        border-radius: 8px;
+        padding: 1.5rem;
+        color: #fff;
+        font-family: "Menlo", monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        overflow: auto;
+      }
+
+      .code-preview pre {
+        margin: 0;
+      }
+
+      .code-preview code {
+        display: block;
+        white-space: pre;
+      }
+
+      .code-bg {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        opacity: 0.1;
+      }
+
+      @media (max-width: 968px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-visual {
+          min-height: 300px;
+        }
+
+        .hero-content {
+          padding: 2rem;
+        }
+
+        .features {
+          padding: 2rem;
+        }
+      }
+
+      .app-story {
+        padding: 4rem;
+        background: var(--bg-light);
+      }
+
+      .story-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .learning-path {
+        display: grid;
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .path-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .number {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--primary);
+        background: rgba(0, 102, 255, 0.1);
+        padding: 0.5rem;
+        border-radius: 4px;
+      }
+
+      .download-section {
+        text-align: center;
+        padding: 4rem;
+        background: var(--bg);
+      }
+
+      .app-store-button {
+        display: inline-block;
+        transition: transform 0.2s ease;
+      }
+
+      .app-store-button:hover {
+        transform: translateY(-2px);
+      }
+
+      .app-store-button svg {
+        width: 140px;
+        height: auto;
+      }
+
+      @media (max-width: 768px) {
+        .story-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .code-preview {
+          font-size: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>FitTimer</h1>
+        <p class="hero-subtitle">
+          A simple iOS timer for your home workouts. No expertise needed, just
+          you and your desire to move a little more.
+        </p>
+        <img
+          src="app-store-badge.svg"
+          alt="Download on the App Store"
+          class="app-badge"
+        />
+        <div class="tech-stack">
+          <span class="tech-highlight">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path
+                d="M21.984 16.348c.056-.112.056-.224.112-.336 1.346-5.272-1.851-11.44-7.347-14.693 2.412 3.253 3.365 7.122 2.524 10.599-.056.28-.168.617-.28.897a5.173 5.173 0 0 1-.45-.28S11.104 9.17 5.273 3.282c-.169-.168 3.14 4.71 6.841 8.58-1.738-1.01-6.673-4.542-9.758-7.403.337.617.842 1.234 1.346 1.851 2.58 3.309 5.945 7.346 9.983 10.43-2.86 1.74-6.842 1.851-10.88 0-1.01-.448-1.85-1.009-2.804-1.682 1.682 2.636 4.318 5.048 7.459 6.337 3.757 1.627 7.57 1.515 10.318 0h.057c.112-.056.224-.112.336-.224 1.346-.673 3.982-1.402 5.44 1.402.392.785 1.121-2.86-1.121-6.225z"
+                fill="currentColor"
+              />
+            </svg>
+            Swift
+          </span>
+          <span class="tech-highlight">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path
+                d="M12.152 6.896c-.948 0-1.671.331-2.169.993-.498.662-.747 1.608-.747 2.84s.249 2.178.747 2.84c.498.662 1.221.993 2.169.993.948 0 1.671-.331 2.169-.993.498-.662.747-1.608.747-2.84s-.249-2.178-.747-2.84c-.498-.662-1.221-.993-2.169-.993zM12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm.152 15.724c-1.748 0-3.127-.623-4.137-1.869C7.005 12.609 6.5 11.075 6.5 9.253c0-1.822.505-3.356 1.515-4.602 1.01-1.246 2.389-1.869 4.137-1.869 1.748 0 3.127.623 4.137 1.869C17.495 5.897 18 7.431 18 9.253c0 1.822-.505 3.356-1.515 4.602-1.01 1.246-2.389 1.869-4.137 1.869z"
+                fill="currentColor"
+              />
+            </svg>
+            SwiftUI
+          </span>
+          <span class="tech-highlight">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path
+                d="M13.325 3.05L8.667 20.432l1.983.284 4.658-17.382-1.983-.284zM4.783 12l5.159-3.667-1.226-1.725L2 12l6.716 4.392 1.226-1.725L4.783 12zm14.434 0l-5.159 3.667 1.226 1.725L22 12l-6.716-4.392-1.226 1.725L19.217 12z"
+                fill="currentColor"
+              />
+            </svg>
+            Cursor.so AI
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="feature">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" />
+        </svg>
+        <h3>Just Press Start</h3>
+        <p>
+          Follow along with your favorite YouTube workout videos. Simple timer
+          controls keep you focused on moving.
+        </p>
+      </div>
+
+      <div class="feature">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        <h3>Save Your Favorites</h3>
+        <p>
+          Keep track of workout videos you enjoy. One tap to start your saved
+          routines next time.
+        </p>
+      </div>
+
+      <div class="feature">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M23 6l-9.5 9.5-5-5L1 18" />
+          <path d="M17 6h6v6" />
+        </svg>
+        <h3>Optional Tracking</h3>
+        <p>
+          Count push-ups if you want, skip if you don't. No pressure, just
+          movement.
+        </p>
+      </div>
+    </section>
+
+    <section class="development-story">
+      <h2>The Development Journey</h2>
+      <p>
+        FitTimer represents my journey into iOS development, built as a learning
+        project with Swift. Using modern AI tools like Cursor.so, I transformed
+        from a beginner to shipping my first App Store application.
+      </p>
+      <div class="tech-badges">
+        <span class="tech-highlight">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path
+              d="M22 17.607c-.786 2.28-3.139 6.317-5.563 6.361-1.608.031-2.125-.953-3.963-.953-1.837 0-2.412.923-3.932.983-2.572.099-6.542-5.827-6.542-10.995 0-4.747 3.308-7.1 6.198-7.143 1.55-.028 3.014 1.045 3.959 1.045.949 0 2.727-1.29 4.596-1.101.782.033 2.979.315 4.389 2.377-3.741 2.442-3.158 7.549.858 9.426zm-5.222-17.607c-2.826.114-5.132 3.079-4.81 5.531 2.612.203 5.118-2.725 4.81-5.531z"
+            />
+          </svg>
+          Swift
+        </span>
+        <span class="tech-highlight">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+            />
+          </svg>
+          SwiftUI
+        </span>
+        <span class="tech-highlight">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+            />
+          </svg>
+          Cursor.so AI
+        </span>
+      </div>
+    </section>
+
+    <section class="app-story">
+      <div class="story-grid">
+        <div class="story-content">
+          <h2>Built to Learn</h2>
+          <p>
+            FitTimer started as my journey into iOS development. Using Swift and
+            modern AI tools, I went from learning to coding to shipping my first
+            App Store application.
+          </p>
+          <div class="learning-path">
+            <div class="path-item">
+              <span class="number">01</span>
+              <h4>Learning Swift</h4>
+              <p>Started from scratch with Swift fundamentals</p>
+            </div>
+            <div class="path-item">
+              <span class="number">02</span>
+              <h4>AI Assistance</h4>
+              <p>Leveraged Cursor.so for real-time coding guidance</p>
+            </div>
+            <div class="path-item">
+              <span class="number">03</span>
+              <h4>App Store Launch</h4>
+              <p>Successfully published to the iOS App Store</p>
+            </div>
+          </div>
+        </div>
+        <div class="story-visual">
+          <div class="code-preview">
+            <svg class="code-bg" viewBox="0 0 24 24" width="24" height="24">
+              <path
+                d="M8 18l-6-6 6-6M16 6l6 6-6 6"
+                stroke="currentColor"
+                fill="none"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <pre><code>// Swift code snippet
+struct WorkoutTimer: View {
+    @State private var isRunning = false
+    @State private var timeRemaining = 300
+    
+    var body: some View {
+        VStack {
+            Text(timeString(from: timeRemaining))
+                .font(.system(size: 54, weight: .light))
+            Button(isRunning ? "Pause" : "Start") {
+                isRunning.toggle()
+            }
+        }
+    }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="download-section">
+        <h2>Ready to move?</h2>
+        <p>Available exclusively on iOS</p>
+        <a href="#" class="app-store-button">
+          <svg viewBox="0 0 119.66407 40" width="140">
+            <path
+              d="M110.13477,0H9.53468c-.3667,0-.729,0-1.09473.002-.30615.002-.60986.00781-.91895.0127A13.21476,13.21476,0,0,0,5.5171.19141a6.66509,6.66509,0,0,0-1.90088.627A6.43779,6.43779,0,0,0,1.99757,1.99707,6.25844,6.25844,0,0,0,.81935,3.61816a6.60119,6.60119,0,0,0-.625,1.90332,12.993,12.993,0,0,0-.1792,2.002C.00587,7.83008.00489,8.1377,0,8.44434V31.5586c.00489.3105.00587.6113.01515.9219a12.99232,12.99232,0,0,0,.1792,2.0019,6.58756,6.58756,0,0,0,.625,1.9043A6.20778,6.20778,0,0,0,1.99757,38.001a6.27445,6.27445,0,0,0,1.61865,1.1787,6.70082,6.70082,0,0,0,1.90088.6308,13.45514,13.45514,0,0,0,2.0039.1768c.30909.0068.6128.0107.91895.0107C8.80567,40,9.168,40,9.53468,40H110.13477c.3594,0,.7246,0,1.084-.002.3047,0,.6172-.0039.9219-.0107a13.279,13.279,0,0,0,2-.1768,6.80432,6.80432,0,0,0,1.9082-.6308,6.27742,6.27742,0,0,0,1.6172-1.1787,6.39482,6.39482,0,0,0,1.1816-1.6143,6.60413,6.60413,0,0,0,.6191-1.9043,13.50643,13.50643,0,0,0,.1856-2.0019c.0039-.3106.0039-.6114.0039-.9219.0078-.3633.0078-.7246.0078-1.0938V9.53613c0-.36621,0-.72949-.0078-1.09179,0-.30664,0-.61426-.0039-.9209a13.5071,13.5071,0,0,0-.1856-2.002,6.6177,6.6177,0,0,0-.6191-1.90332,6.46619,6.46619,0,0,0-2.7988-2.7998,6.76754,6.76754,0,0,0-1.9082-.627,13.04394,13.04394,0,0,0-2-.17676c-.3047-.00488-.6172-.01074-.9219-.01269C110.85937,0,110.49417,0,110.13477,0Z"
+              style="fill: #a6a6a6"
+            />
+            <path
+              d="M8.44483,39.125c-.30468,0-.602-.0039-.90429-.0107a12.68714,12.68714,0,0,1-1.86914-.1631,5.88381,5.88381,0,0,1-1.65674-.5479,5.40573,5.40573,0,0,1-1.397-1.0166,5.32082,5.32082,0,0,1-1.02051-1.3965,5.72186,5.72186,0,0,1-.543-1.6572,12.41351,12.41351,0,0,1-.1665-1.875c-.00634-.2109-.01464-.9131-.01464-.9131V8.44434S.88185,7.75293.8877,7.5498a12.37039,12.37039,0,0,1,.16553-1.87207,5.7555,5.7555,0,0,1,.54346-1.6621A5.37349,5.37349,0,0,1,2.61183,2.61768,5.56543,5.56543,0,0,1,4.01417,1.59521a5.82309,5.82309,0,0,1,1.65332-.54394A12.58589,12.58589,0,0,1,7.543.88721L8.44532.875H111.21387l.9131.0127a12.38493,12.38493,0,0,1,1.8584.16259,5.93833,5.93833,0,0,1,1.6709.54785,5.59374,5.59374,0,0,1,2.415,2.41993,5.76267,5.76267,0,0,1,.5352,1.64892,12.995,12.995,0,0,1,.1738,1.88721c.0029.2832.0029.5874.0029.89014.0079.375.0079.73193.0079,1.09179V30.4648c0,.3633,0,.7178-.0079,1.0752,0,.3252,0,.6231-.0039.9297a12.73126,12.73126,0,0,1-.1709,1.8535,5.739,5.739,0,0,1-.54,1.67,5.48029,5.48029,0,0,1-1.0156,1.3857,5.4129,5.4129,0,0,1-1.3994,1.0225,5.86168,5.86168,0,0,1-1.668.5498,12.54218,12.54218,0,0,1-1.8692.1631c-.2929.0068-.5996.0107-.8974.0107l-1.084.002Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M24.76888,20.30068a4.94881,4.94881,0,0,1,2.35656-4.15206,5.06566,5.06566,0,0,0-3.99116-2.15768c-1.67924-.17626-3.30719,1.00483-4.1629,1.00483-.87227,0-2.18977-.98733-3.6085-.95814a5.31529,5.31529,0,0,0-4.47292,2.72787c-1.934,3.34842-.49141,8.26947,1.3612,10.97608.9269,1.32535,2.01018,2.8058,3.42763,2.7533,1.38706-.05753,1.9051-.88448,3.5794-.88448,1.65876,0,2.14479.88448,3.591.8511,1.48838-.02416,2.42613-1.33124,3.32051-2.66914a10.962,10.962,0,0,0,1.51842-3.09251A4.78205,4.78205,0,0,1,24.76888,20.30068Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M22.03725,12.21089a4.87248,4.87248,0,0,0,1.11452-3.49062,4.95746,4.95746,0,0,0-3.20758,1.65961,4.63634,4.63634,0,0,0-1.14371,3.36139A4.09905,4.09905,0,0,0,22.03725,12.21089Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M42.30227,27.13965h-4.7334l-1.13672,3.35645H34.42727l4.4834-12.418h2.083l4.4834,12.418H43.438ZM38.0591,25.59082h3.752l-1.84961-5.44727h-.05176Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M55.15969,25.96973c0,2.81348-1.50586,4.62109-3.77832,4.62109a3.0693,3.0693,0,0,1-2.84863-1.584h-.043v4.48438h-1.8584V21.44238H48.4302v1.50586h.03418a3.21162,3.21162,0,0,1,2.88281-1.60059C53.645,21.34766,55.15969,23.16406,55.15969,25.96973Zm-1.91016,0c0-1.833-.94727-3.03809-2.39258-3.03809-1.41992,0-2.375,1.23047-2.375,3.03809,0,1.82422.95508,3.0459,2.375,3.0459C52.30227,29.01563,53.24953,27.81934,53.24953,25.96973Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M65.12453,25.96973c0,2.81348-1.50586,4.62109-3.77832,4.62109a3.0693,3.0693,0,0,1-2.84863-1.584h-.043v4.48438h-1.8584V21.44238H58.395v1.50586h.03418A3.21162,3.21162,0,0,1,61.312,21.34766C63.60988,21.34766,65.12453,23.16406,65.12453,25.96973Zm-1.91016,0c0-1.833-.94727-3.03809-2.39258-3.03809-1.41992,0-2.375,1.23047-2.375,3.03809,0,1.82422.95508,3.0459,2.375,3.0459C62.26711,29.01563,63.21438,27.81934,63.21438,25.96973Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M71.71047,27.03613c.1377,1.23145,1.334,2.04,2.96875,2.04,1.56641,0,2.69336-.80859,2.69336-1.91895,0-.96387-.67969-1.541-2.28906-1.93652l-1.60937-.3877c-2.28027-.55078-3.33887-1.61719-3.33887-3.34766,0-2.14258,1.86719-3.61426,4.51855-3.61426,2.624,0,4.42285,1.47168,4.4834,3.61426h-1.876c-.1123-1.23926-1.13672-1.9873-2.63379-1.9873s-2.52148.75684-2.52148,1.8584c0,.87793.6543,1.39453,2.25488,1.79l1.36816.33594c2.54785.60254,3.60645,1.626,3.60645,3.44238,0,2.32324-1.85059,3.77832-4.79395,3.77832-2.75391,0-4.61328-1.4209-4.7334-3.667Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M83.34621,19.2998v2.14258h1.72168v1.47168H83.34621v4.99121c0,.77539.34473,1.13672,1.10156,1.13672a5.80752,5.80752,0,0,0,.61133-.043v1.46289a5.10351,5.10351,0,0,1-1.03223.08594c-1.833,0-2.54785-.68848-2.54785-2.44434V22.91406H80.16262V21.44238H81.479V19.2998Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M86.065,25.96973c0-2.84863,1.67773-4.63867,4.29395-4.63867,2.625,0,4.29492,1.79,4.29492,4.63867,0,2.85645-1.66113,4.63867-4.29492,4.63867C87.72609,30.6084,86.065,28.82617,86.065,25.96973Zm6.69531,0c0-1.9541-.89551-3.10742-2.40137-3.10742s-2.40039,1.16211-2.40039,3.10742c0,1.96191.89453,3.10645,2.40039,3.10645S92.76027,27.93164,92.76027,25.96973Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M96.18606,21.44238h1.77246v1.541h.043a2.1594,2.1594,0,0,1,2.17773-1.63574,2.86616,2.86616,0,0,1,.63672.06934v1.73828a2.59794,2.59794,0,0,0-.835-.1123,1.87264,1.87264,0,0,0-1.93652,2.083v5.37012h-1.8584Z"
+              style="fill: #fff"
+            />
+            <path
+              d="M109.3843,27.83691c-.25,1.64355-1.85059,2.77148-3.89844,2.77148-2.63379,0-4.26855-1.76465-4.26855-4.5957,0-2.83984,1.64355-4.68164,4.19043-4.68164,2.50488,0,4.08008,1.7207,4.08008,4.46582v.63672h-6.39453v.1123a2.358,2.358,0,0,0,2.43555,2.56445,2.04834,2.04834,0,0,0,2.09082-1.27344Zm-6.28223-2.70215h4.52637a2.1773,2.1773,0,0,0-2.2207-2.29785A2.292,2.292,0,0,0,103.10207,25.13477Z"
+              style="fill: #fff"
+            />
+          </svg>
+        </a>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitTrack - A Personal iOS Journey</title>
+    <style>
+      :root {
+        --primary: #1a1a1a;
+        --secondary: #333333;
+        --accent: #666666;
+        --light: #f8f8f8;
+        --white: #ffffff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6;
+        color: var(--primary);
+        background-color: var(--white);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .hero {
+        background: var(--white);
+        color: var(--primary);
+        padding: 4rem 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(26, 26, 26, 0.02) 0%,
+          rgba(26, 26, 26, 0) 100%
+        );
+        z-index: 1;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 85%;
+        margin: 0 auto;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        margin-bottom: 1rem;
+        font-weight: 700;
+        letter-spacing: -1px;
+      }
+
+      .hero p {
+        font-size: clamp(1rem, 4vw, 1.2rem);
+        max-width: 600px;
+        margin: 0 auto;
+        color: var(--accent);
+      }
+
+      .key-points,
+      .journey {
+        padding: 4rem 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+        background: var(--white);
+      }
+
+      .key-points h2,
+      .journey h2 {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        margin-bottom: 3rem;
+        color: var(--primary);
+        letter-spacing: -0.5px;
+      }
+
+      .points-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        padding: 0 1rem;
+      }
+
+      .point-item {
+        padding: 2rem 1.5rem;
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .point-item:hover {
+        transform: translateY(-5px);
+      }
+
+      .point-item svg {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 1rem;
+        fill: var(--primary);
+      }
+
+      .point-item h3 {
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        font-size: 1.25rem;
+      }
+
+      .point-item p {
+        color: var(--accent);
+        font-size: 0.95rem;
+      }
+
+      .highlight {
+        background: var(--light);
+        padding: 4rem 1.5rem;
+        text-align: center;
+      }
+
+      .highlight-content {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .highlight h2 {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        margin-bottom: 1.5rem;
+        color: var(--primary);
+        letter-spacing: -0.5px;
+      }
+
+      .highlight-points {
+        display: grid;
+        gap: 1rem;
+        text-align: left;
+        margin-top: 2rem;
+      }
+
+      .highlight-point {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--white);
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .highlight-point span {
+        color: var(--accent);
+        font-size: 0.95rem;
+      }
+
+      .journey-content {
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: left;
+        background: var(--white);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .journey-point {
+        margin-bottom: 1.5rem;
+        padding-left: 1.5rem;
+        border-left: 2px solid var(--accent);
+      }
+
+      .journey-point h3 {
+        color: var(--primary);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .journey-point p {
+        color: var(--accent);
+        font-size: 0.95rem;
+      }
+
+      .download-section {
+        background: var(--light);
+        padding: 4rem 1.5rem;
+        text-align: center;
+      }
+
+      .download-content {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .download-btn {
+        display: inline-block;
+        background: var(--primary);
+        color: var(--white);
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 2rem;
+        transition: transform 0.3s ease;
+      }
+
+      .download-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      footer {
+        background: var(--white);
+        color: var(--accent);
+        text-align: center;
+        padding: 2rem 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      @media (max-width: 768px) {
+        .points-grid {
+          grid-template-columns: 1fr;
+          padding: 0;
+        }
+
+        .point-item {
+          padding: 1.5rem;
+        }
+
+        .highlight-point {
+          padding: 0.75rem;
+        }
+
+        .journey-content {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>FitTrack</h1>
+        <p>A simple fitness companion for your home workout journey</p>
+      </div>
+    </section>
+
+    <section class="journey">
+      <h2>My Journey</h2>
+      <div class="journey-content">
+        <div class="journey-point">
+          <h3>Learning Swift</h3>
+          <p>
+            This app represents my first steps into iOS development. As someone
+            new to Swift, I wanted to create something meaningful while
+            learning.
+          </p>
+        </div>
+        <div class="journey-point">
+          <h3>A Different Approach</h3>
+          <p>
+            I'm not a fitness expert or gym enthusiast. Just someone who wanted
+            to move more and stay active at home. This app reflects that simple,
+            pressure-free approach.
+          </p>
+        </div>
+        <div class="journey-point">
+          <h3>Keep It Simple</h3>
+          <p>
+            Instead of complex tracking or strict routines, FitTrack focuses on
+            the basics - like counting push-ups or following along with workout
+            videos.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="key-points">
+      <h2>Keep It Simple</h2>
+      <div class="points-grid">
+        <div class="point-item">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"
+            />
+          </svg>
+          <h3>No Experience Needed</h3>
+          <p>Perfect for beginners starting their fitness journey</p>
+        </div>
+        <div class="point-item">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"
+            />
+          </svg>
+          <h3>Workout Anywhere</h3>
+          <p>No gym required - just you and your space</p>
+        </div>
+        <div class="point-item">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"
+            />
+          </svg>
+          <h3>Track Progress</h3>
+          <p>Count your daily push-ups and celebrate small wins</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="highlight">
+      <div class="highlight-content">
+        <h2>Built Different</h2>
+        <div class="highlight-points">
+          <div class="highlight-point">
+            <span>✨ Made while learning Swift & iOS development</span>
+          </div>
+          <div class="highlight-point">
+            <span>🏃‍♂️ Focus on movement, not perfection</span>
+          </div>
+          <div class="highlight-point">
+            <span>📱 Simple interface for quick workouts</span>
+          </div>
+          <div class="highlight-point">
+            <span>🎯 Track what matters to you</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section">
+      <div class="download-content">
+        <h2>Get Moving Today</h2>
+        <p>Start your simple fitness journey with FitTrack</p>
+        <a href="https://apps.apple.com/app/fittrack" class="download-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path
+              d="M21.984 16.348c.056-.112.056-.224.112-.336 1.346-5.272-1.851-11.44-7.347-14.693 2.412 3.253 3.365 7.122 2.524 10.599-.056.28-.168.617-.28.897a5.173 5.173 0 0 1-.45-.28S11.104 9.17 5.273 3.282c-.169-.168 3.14 4.71 6.841 8.58-1.738-1.01-6.673-4.542-9.758-7.403.337.617.842 1.234 1.346 1.851 2.58 3.309 5.945 7.346 9.983 10.43-2.86 1.74-6.842 1.851-10.88 0-1.01-.448-1.85-1.009-2.804-1.682 1.682 2.636 4.318 5.048 7.459 6.337 3.757 1.627 7.57 1.515 10.318 0h.057c.112-.056.224-.112.336-.224 1.346-.673 3.982-1.402 5.44 1.402.392.785 1.121-2.86-1.121-6.225z"
+              fill="currentColor"
+            />
+          </svg>
+
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path
+              d="M22 17.607c-.786 2.28-3.139 6.317-5.563 6.361-1.608.031-2.125-.953-3.963-.953-1.837 0-2.412.923-3.932.983-2.572.099-6.542-5.827-6.542-10.995 0-4.747 3.308-7.1 6.198-7.143 1.55-.028 3.014 1.045 3.959 1.045.949 0 2.727-1.29 4.596-1.101.782.033 2.979.315 4.389 2.377-3.741 2.442-3.158 7.549.858 9.426zm-5.222-17.607c-2.826.114-5.132 3.079-4.81 5.531 2.612.203 5.118-2.725 4.81-5.531z"
+            />
+          </svg>
+          Download on App Store</a
+        >
+      </div>
+    </section>
+
+    <footer>
+      <p>Built with Swift, powered by passion</p>
+    </footer>
+  </body>
+</html>

@@ -5,54 +5,102 @@ struct ActivityDetailView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var activity: DailyActivity
     var onSave: (DailyActivity) -> Void
-    @State private var notificationTimes: [Date] = []
+    @State private var notificationTimes: [DateComponents] = []
     
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Activity Details")) {
+                Section {
                     TextField("Activity Name", text: $activity.name)
-                    HStack {
-                        Text("Count: \(activity.count)")
-                        Spacer()
-                        Button(action: {
-                            activity.count += 1
-                        }) {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.accentColor)
-                        }
-                        Button(action: {
-                            if activity.count > 0 {
-                                activity.count -= 1
-                            }
-                        }) {
-                            Image(systemName: "minus.circle.fill")
-                                .foregroundColor(.accentColor)
-                        }
-                    }
+                        .font(.body)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.vertical, 8)
+                } header: {
+                    Text("Activity Details")
+                        .font(.headline)
                 }
 
-                Section(header: Text("Notification Times")) {
+                Section {
+                    HStack {
+                        Text("Daily Count")
+                            .font(.body)
+                        Spacer()
+                        HStack(spacing: 20) {
+                            Button(action: {
+                                if activity.count > 0 {
+                                    activity.count -= 1
+                                }
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .imageScale(.large)
+                                    .foregroundColor(.accentColor)
+                                    .frame(width: 44, height: 44) // Apple's minimum touch target size
+                            }
+                            
+                            Text("\(activity.count)")
+                                .font(.headline)
+                            
+                            Button(action: {
+                                activity.count += 1
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .imageScale(.large)
+                                    .foregroundColor(.accentColor)
+                                    .frame(width: 44, height: 44)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+
+                Section {
                     ForEach(notificationTimes.indices, id: \.self) { index in
-                        DatePicker("Time \(index + 1)", selection: $notificationTimes[index], displayedComponents: .hourAndMinute)
+                        HStack {
+                            DatePicker(
+                                "Notification \(index + 1)",
+                                selection: Binding(
+                                    get: {
+                                        Calendar.current.date(from: notificationTimes[index]) ?? Date()
+                                    },
+                                    set: { newDate in
+                                        notificationTimes[index] = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                    }
+                                ),
+                                displayedComponents: .hourAndMinute
+                            )
+                            .datePickerStyle(.compact)
+                        }
                     }
                     .onDelete(perform: deleteNotificationTime)
 
                     Button(action: {
-                        notificationTimes.append(Date())
+                        let newComponents = Calendar.current.dateComponents([.hour, .minute], from: Date())
+                        notificationTimes.append(newComponents)
                     }) {
                         Label("Add Notification Time", systemImage: "plus.circle.fill")
                             .foregroundColor(.accentColor)
                     }
+                    .padding(.vertical, 8)
+                } header: {
+                    Text("Daily Notifications")
+                        .font(.headline)
+                } footer: {
+                    Text("Notifications will repeat daily at these times")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
 
                 Section {
-                    Button("Reset Count", role: .destructive) {
+                    Button(role: .destructive) {
                         activity.count = 0
+                    } label: {
+                        Text("Reset Count")
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
             }
             .navigationTitle("Edit Activity")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -66,13 +114,8 @@ struct ActivityDetailView: View {
                 }
             }
             .onAppear {
-                // Convert DateComponents to Date for editing
-                notificationTimes = activity.notifications.compactMap { components in
-                    var dateComponents = DateComponents()
-                    dateComponents.hour = components.hour
-                    dateComponents.minute = components.minute
-                    return Calendar.current.date(from: dateComponents) ?? Date()
-                }
+                // Initialize notification times from activity
+                notificationTimes = activity.notifications
             }
         }
     }
@@ -82,10 +125,7 @@ struct ActivityDetailView: View {
     }
 
     private func saveChanges() {
-        activity.notifications = notificationTimes.map { date in
-            Calendar.current.dateComponents([.hour, .minute], from: date)
-        }
-        
+        activity.notifications = notificationTimes
         scheduleNotifications(for: activity)
         onSave(activity)
         dismiss()
@@ -101,17 +141,13 @@ struct ActivityDetailView: View {
         
         // Schedule new notifications
         for components in activity.notifications {
-            var dateComponents = DateComponents()
-            dateComponents.hour = components.hour
-            dateComponents.minute = components.minute
-            
             let content = UNMutableNotificationContent()
             content.title = "Time for \(activity.name)!"
             content.body = "Track your progress by adding to your daily count."
             content.sound = .default
             content.badge = 1
             
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
             let identifier = "\(activity.id)_\(components.hour ?? 0)_\(components.minute ?? 0)"
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
             

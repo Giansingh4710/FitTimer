@@ -3,7 +3,7 @@ import AVFoundation
 
 struct WorkoutDetailView: View {
     @State var plan: WorkoutPlan
-    var onSave: (WorkoutPlan) -> Void
+    let onSave: (WorkoutPlan) -> Void
     @State private var currentExerciseIndex = 0
     @State private var isResting = false
     @State private var timeRemaining = 0

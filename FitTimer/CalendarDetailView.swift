@@ -1,5 +1,11 @@
 import SwiftUI
 
+struct ActivityLog: Identifiable, Codable {
+    let id = UUID()
+    var date: Date
+    var activities: [DailyActivity]
+}
+
 struct CalendarDetailView: View {
     @Binding var activityLogs: [ActivityLog]
     @State private var selectedDate: Date = Date()

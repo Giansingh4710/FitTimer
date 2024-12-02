@@ -8,15 +8,19 @@ struct DailyActivitySection: View {
 
     var body: some View {
         Section(header: Text("Daily Activities").font(.title2).bold()) {
-            ForEach(Array(dailyActivities.enumerated()), id: \.offset) { index, activity in
+            ForEach(Array(dailyActivities.enumerated()), id: \.offset ) { index, activity in
                 ActivityRow(
-                    activity: activity,
+                    activity: $dailyActivities[index],
+                    // activity: activity,
                     incrementAction: {
                         dailyActivities[index].count += 1
+                        print("Incrementing count for activity: \(dailyActivities[index].name) \(dailyActivities[index].count)")
+                        saveActivities() // Add this to persist the count
                     },
                     decrementAction: {
                         if dailyActivities[index].count > 0 {
                             dailyActivities[index].count -= 1
+                            saveActivities() // Add this to persist the count
                         }
                     }
                 )
@@ -39,6 +43,7 @@ struct DailyActivitySection: View {
 
             Button(action: {
                 isShowingAddActivityModal = true
+                // isShowingAddActivityModal.toggle() 
             }) {
                 Label("Add Daily Activity", systemImage: "plus.circle.fill")
                     .foregroundColor(.accentColor)
@@ -108,7 +113,7 @@ struct DailyActivitySection: View {
 
 // Helper view for consistent activity row presentation
 struct ActivityRow: View {
-    let activity: DailyActivity
+    @Binding var activity: DailyActivity
     let incrementAction: () -> Void
     let decrementAction: () -> Void
 

@@ -5,7 +5,7 @@ struct AddActivityModal: View {
     @Environment(\.dismiss) var dismiss
     @Binding var dailyActivities: [DailyActivity]
     var saveActivities: () -> Void
-    @State private var activityName: String = ""
+    @State private var activityName: String = "bob"
     @State private var notificationTimes: [Date] = [Date()]
     @State private var showingNotificationPermissionAlert = false
     @State private var numberOfRandomTimes: String = ""
@@ -26,9 +26,6 @@ struct AddActivityModal: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .focused($isNumberInputFocused)
                             .submitLabel(.done)
-                            .onSubmit {
-                                generateRandomTimes()
-                            }
                         Button(action: {
                             generateRandomTimes()
                         }) {
@@ -143,7 +140,7 @@ struct AddActivityModal: View {
         notificationTimes.sort()
         
         // Clear the input field
-        numberOfRandomTimes = ""
+        // numberOfRandomTimes = ""
     }
 
     private func saveActivity() {

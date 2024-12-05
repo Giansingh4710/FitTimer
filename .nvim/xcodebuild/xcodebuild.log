@@ -1,0 +1,11 @@
+[!]  --- xcodebuild: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, id:D0DEDDFA-CCBF-4A68-8B69-274DAA9D8AD9, OS:18.0, name:iPhone 16 }
+{ platform:iOS Simulator, id:D0DEDDFA-CCBF-4A68-8B69-274DAA9D8AD9, OS:18.0, name:iPhone 16 }
+Build Succeeded
+
+-----------------------------
+-- xcodebuild.nvim summary --
+-----------------------------
+
+  ✔ Build Succeeded
+

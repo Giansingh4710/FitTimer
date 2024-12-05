@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct WorkoutSection: View {
+struct ListOfWorkouts: View {
     @State private var workoutPlans: [WorkoutPlan] = []
     @State private var isShowingAddWorkoutModal = false
     @State private var selectedWorkout: WorkoutPlan?

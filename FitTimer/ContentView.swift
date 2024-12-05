@@ -6,36 +6,52 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct ContentView: View {
+    @State private var dailyActivities: [DailyActivity] = []
+    @State private var activityToShow: DailyActivity? = nil
+    @State private var showAddActivityModal = false
+
     // @State private var isShowingCalendarView = false
 
     var body: some View {
         NavigationView {
-            VStack {
-                List {
-                    WorkoutSection()
-                    DailyActivitySection()
-                }
-                Spacer()
-                Button(action: {
-                    // isShowingCalendarView = true
-                }) {
-                    HStack {
-                        Image(systemName: "calendar")
-                        Text("View Calendar")
-                    }
-                    .font(.headline)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
-                .padding()
+            List {
+                ListOfWorkouts()
+                ListOfDailyActivities(
+                    dailyActivities: $dailyActivities,
+                    activityToShow: $activityToShow, showAddActivityModal:
+                    $showAddActivityModal
+                )
+
+                // Button(action: {
+                //     isShowingCalendarView = true
+                // }) {
+                //     HStack {
+                //         Image(systemName: "calendar")
+                //         Text("View Calendar")
+                //     }
+                //     .font(.headline)
+                //     .padding()
+                //     .background(Color.accentColor)
+                //     .foregroundColor(.white)
+                //     .cornerRadius(10)
+                // }
+                // .padding()
             }
             .navigationTitle("Fit Timer")
-            .onAppear { requestNotificationPermission() }
             // .sheet(isPresented: $isShowingCalendarView) { CalendarDetailView(activityLogs: $activityLogs) }
+        }
+        .onAppear {
+            loadActivities(&dailyActivities)
+            requestNotificationPermission()
+        }
+        .sheet(isPresented: $showAddActivityModal) {
+            AddActivityModal(dailyActivities: $dailyActivities)
+        }
+        .sheet(item: $activityToShow) { activity in
+            ActivityDetailModal(activity: activity, dailyActivities: $dailyActivities)
         }
     }
 
@@ -48,6 +64,15 @@ struct ContentView: View {
     }
 }
 
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
+    }
+}
+
 #Preview {
     ContentView()
+    // .preferredColorScheme(.light)
 }

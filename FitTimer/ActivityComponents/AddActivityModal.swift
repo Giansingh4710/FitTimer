@@ -4,7 +4,6 @@ import UserNotifications
 struct AddActivityModal: View {
     @Environment(\.dismiss) var dismiss
     @Binding var dailyActivities: [DailyActivity]
-    var saveActivities: () -> Void
     @State private var activityName: String = "bob"
     @State private var notificationTimes: [Date] = [Date()]
     @State private var showingNotificationPermissionAlert = false
@@ -37,7 +36,7 @@ struct AddActivityModal: View {
                     Text("Tap generate or press return to create random times")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     ForEach(notificationTimes.indices, id: \.self) { index in
                         DatePicker("Time \(index + 1)", selection: $notificationTimes[index], displayedComponents: .hourAndMinute)
                     }
@@ -65,7 +64,6 @@ struct AddActivityModal: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         saveActivity()
-                        dismiss()
                     }
                     .disabled(activityName.isEmpty || notificationTimes.isEmpty)
                 }
@@ -73,12 +71,26 @@ struct AddActivityModal: View {
         }
         .alert(isPresented: $showingNotificationPermissionAlert) {
             Alert(
-                title: Text("Notification Permission Required"),
-                message: Text("Please enable notifications in Settings to receive activity reminders.")
+                title: Text("Notification Permission Required to Get Reminders"),
+                message: Text("if you click OK, you will basically have a counter and won't get any reminders"),
+                primaryButton: .default(
+                    Text("Ok"),
+                    action: {
+                        let newActivity = DailyActivity(name: activityName, count: 0, notifications: [])
+                        appendActivity(newActivity, &dailyActivities)
+                        dismiss()
+                    }
+                ),
+                secondaryButton: .destructive(
+                    Text("Cancel"),
+                    action: {
+                        dismiss()
+                    }
+                )
             )
         }
         .alert("Invalid Input", isPresented: $showingRandomTimesAlert) {
-            Button("OK", role: .cancel) { }
+            Button("OK", role: .cancel) {}
         } message: {
             Text("Please enter a number between 1 and 100")
         }
@@ -97,48 +109,48 @@ struct AddActivityModal: View {
     private func deleteNotificationTime(at offsets: IndexSet) {
         notificationTimes.remove(atOffsets: offsets)
     }
-    
+
     private func generateRandomTimes() {
         guard let count = Int(numberOfRandomTimes), count > 0, count <= 100 else {
             showingRandomTimesAlert = true
             return
         }
-        
+
         isNumberInputFocused = false
-        
+
         // Clear existing times
         notificationTimes.removeAll()
-        
+
         // Generate random times between 8 AM and 10 PM
         let calendar = Calendar.current
         var date = Date()
         date = calendar.startOfDay(for: date)
-        
+
         // Set base date to 8 AM
         date = calendar.date(byAdding: .hour, value: 8, to: date) ?? date
-        
+
         // Calculate seconds between 8 AM and 10 PM (14 hours)
         let secondsInRange = 14 * 60 * 60
-        
+
         // Generate unique random times
         var usedMinutes = Set<Int>()
-        
+
         while notificationTimes.count < count {
-            let randomSeconds = Int.random(in: 0..<secondsInRange)
+            let randomSeconds = Int.random(in: 0 ..< secondsInRange)
             let totalMinutes = randomSeconds / 60
-            
+
             if !usedMinutes.contains(totalMinutes) {
                 usedMinutes.insert(totalMinutes)
-                
+
                 if let newTime = calendar.date(byAdding: .second, value: randomSeconds, to: date) {
                     notificationTimes.append(newTime)
                 }
             }
         }
-        
+
         // Sort times chronologically
         notificationTimes.sort()
-        
+
         // Clear the input field
         // numberOfRandomTimes = ""
     }
@@ -155,17 +167,13 @@ struct AddActivityModal: View {
 
                     let newActivity = DailyActivity(name: activityName, count: 0, notifications: notificationComponents)
                     print(newActivity)
-                    dailyActivities.append(newActivity)
-                    saveActivities()
+                    appendActivity(newActivity, &dailyActivities)
 
                     scheduleNotifications(for: newActivity)
                 }
+                dismiss()
             } else {
-                print("Notification permission not granted")
                 showingNotificationPermissionAlert = true
-                // DispatchQueue.main.async {
-                //     showingNotificationPermissionAlert = true
-                // }
             }
         }
     }

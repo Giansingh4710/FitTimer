@@ -73,7 +73,7 @@ struct AddWorkoutModal: View {
                         saveWorkout()
                         dismiss()
                     }
-                    .disabled(workoutName.isEmpty || exerciseDuration.isEmpty || restDuration.isEmpty)
+                    .disabled(workoutName.isEmpty || exerciseDuration.isEmpty || restDuration.isEmpty || exercises.isEmpty)
                 }
             }
             .onAppear {

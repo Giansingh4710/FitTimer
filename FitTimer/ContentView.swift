@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var dailyActivities: [DailyActivity] = []
     @State private var activityToShow: DailyActivity? = nil
     @State private var showAddActivityModal = false
+    @State private var showingNotificationCenter = false
 
     // @State private var isShowingCalendarView = false
 
@@ -41,7 +42,18 @@ struct ContentView: View {
                 // .padding()
             }
             .navigationTitle("Fit Timer")
-            // .sheet(isPresented: $isShowingCalendarView) { CalendarDetailView(activityLogs: $activityLogs) }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingNotificationCenter = true }) {
+                        Image(systemName: "bell.badge")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingNotificationCenter) {
+                NavigationView {
+                    NotificationCenterView()
+                }
+            }
         }
         .onAppear {
             loadActivities(&dailyActivities)

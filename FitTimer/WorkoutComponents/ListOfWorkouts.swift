@@ -5,7 +5,7 @@ struct ListOfWorkouts: View {
     @State private var isShowingAddWorkoutModal = false
     @State private var selectedWorkout: WorkoutPlan?
     var body: some View {
-        Section(header: Text("Workout Plans").font(.title2).bold()) {
+        Section {
             ForEach(workoutPlans) { plan in
                 NavigationLink(destination: WorkoutDetailView(plan: plan, onSave: updateWorkout)) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -55,6 +55,23 @@ struct ListOfWorkouts: View {
                     Image(systemName: "plus.circle.fill")
                     Text("Add Workout Plan")
                 }.foregroundColor(.accentColor)
+            }
+        } header: {
+            HStack {
+                Text("Workout Plans")
+                    .font(.title2)
+                    .bold()
+                InfoButton(
+                    title: "💪 Workout Plans",
+                    message: """
+                    Create and run timed workout routines!
+
+                    • Design custom exercise sequences
+                    • Set exercise and rest durations
+                    • Follow along with voice guidance
+                    • Perfect for HIIT and circuit training
+                    """
+                )
             }
         }
         .sheet(isPresented: $isShowingAddWorkoutModal) {

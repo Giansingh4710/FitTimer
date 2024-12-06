@@ -8,14 +8,18 @@ struct ListOfDailyActivities: View {
     @State private var selectedActivity: DailyActivity? = nil
 
     var body: some View {
-        Section(header: Text("Daily Activities").font(.title2).bold()) {
+        Section {
             ForEach($dailyActivities) { activity in
                 ActivityRow(
                     activity: activity,
                     activityToShow: $activityToShow,
                     deleteAction: {
-                        dailyActivities.remove(at: dailyActivities.firstIndex(where: { $0.id == activity.id })!)
-                        saveActivities(dailyActivities)
+                        if let index = dailyActivities.firstIndex(where: { $0.id == activity.id }) {
+                            let activity = dailyActivities[index]
+                            NotificationManager.shared.removeNotifications(for: activity)
+                            dailyActivities.remove(at: index)
+                            saveActivities(dailyActivities)
+                        }
                     },
                     saveAction: {
                         saveActivities(dailyActivities)
@@ -27,6 +31,23 @@ struct ListOfDailyActivities: View {
             }) {
                 Label("Add Daily Activity", systemImage: "plus.circle.fill")
                     .foregroundColor(.accentColor)
+            }
+        } header: {
+            HStack {
+                Text("Daily Activities")
+                    .font(.title2)
+                    .bold()
+                InfoButton(
+                    title: "✨ Daily Activities",
+                    message: """
+                    Build healthy habits throughout your day!
+
+                    • Track regular activities
+                    • Set helpful reminders
+                    • Keep count of completions
+                    • Perfect for water breaks, stretching, or quick exercises
+                    """
+                )
             }
         }
     }

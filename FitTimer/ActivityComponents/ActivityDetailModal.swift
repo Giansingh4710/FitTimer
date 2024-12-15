@@ -48,7 +48,7 @@ struct ActivityDetailModal: View {
                                 .frame(minWidth: 40)
 
                             Button(action: {
-                                activity.count += 1
+                                incrementCount()
                             }) {
                                 Image(systemName: "plus.circle.fill")
                                     .imageScale(.large)
@@ -185,6 +185,16 @@ struct ActivityDetailModal: View {
                     print("Error scheduling notification: \(error)")
                 }
             }
+        }
+    }
+
+    private func incrementCount() {
+        if let index = dailyActivities.firstIndex(where: { $0.id == activity.id }) {
+            dailyActivities[index].count += 1
+            // Update the activity count and save
+            updateActivity(dailyActivities[index], &dailyActivities)
+            // Log all activities to history
+            HistoryManager.shared.logActivityCounts(dailyActivities)
         }
     }
 }

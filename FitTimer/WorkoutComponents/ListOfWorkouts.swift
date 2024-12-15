@@ -1,54 +1,47 @@
 import SwiftUI
 
 struct ListOfWorkouts: View {
-    @State private var workoutPlans: [WorkoutPlan] = []
-    @State private var isShowingAddWorkoutModal = false
-    @State private var selectedWorkout: WorkoutPlan?
+    @Binding var workoutPlans: [WorkoutPlan]
+    @Binding var isShowingAddWorkoutModal: Bool
+
     var body: some View {
         Section {
             ForEach(workoutPlans) { plan in
-                NavigationLink(destination: WorkoutDetailView(plan: plan, onSave: updateWorkout)) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(plan.name)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        Text("\(plan.exercises.count) exercises")
-                            .font(.subheadline)
+                NavigationLink(destination: WorkoutDetailView(plan: plan, onSave: { newWorkoutPlan in updateWorkout(newWorkoutPlan, &workoutPlans) })) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(plan.name)
+                                .font(.system(.body, design: .rounded))
+                                .fontWeight(.medium)
+
+                            HStack(spacing: 8) {
+                                Text("\(plan.exercises.count) exercises")
+                                Text("•")
+                                Text(formatDuration(getTotalTime(plan)))
+                            }
+                            .font(.system(.caption, design: .rounded))
                             .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
                     }
-                    .padding(.vertical, 8)
+                    // .padding(.vertical, 8)
+                    // .padding(.horizontal, 16)
                 }
                 .contextMenu {
-                    Button("Edit") {
-                        selectedWorkout = plan
-                        isShowingAddWorkoutModal = true
-                    }
                     Button("Delete", role: .destructive) {
-                        if let index = workoutPlans.firstIndex(where: { $0.id == plan.id }) {
-                            workoutPlans.remove(at: index)
-                            saveWorkouts()
-                        }
+                        deleteWorkout(plan)
                     }
                 }
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        if let index = workoutPlans.firstIndex(where: { $0.id == plan.id }) {
-                            workoutPlans.remove(at: index)
-                            saveWorkouts()
-                        }
+                        deleteWorkout(plan)
                     } label: {
                         Label("Delete", systemImage: "trash")
-                    }
-                    Button {
-                        selectedWorkout = plan
-                        isShowingAddWorkoutModal = true
-                    } label: {
-                        Label("Edit", systemImage: "edit")
                     }
                 }
             }
             Button(action: {
-                selectedWorkout = nil
                 isShowingAddWorkoutModal = true
             }) {
                 HStack {
@@ -74,31 +67,30 @@ struct ListOfWorkouts: View {
                 )
             }
         }
-        .sheet(isPresented: $isShowingAddWorkoutModal) {
-            AddWorkoutModal(workoutPlans: $workoutPlans, selectedWorkout: $selectedWorkout)
-        }
-        .onAppear { loadWorkouts() }
     }
 
-    private func updateWorkout(_ updatedPlan: WorkoutPlan) {
-        if let index = workoutPlans.firstIndex(where: { $0.id == updatedPlan.id }) {
-            workoutPlans[index] = updatedPlan
-            saveWorkouts()
+    private func deleteWorkout(_ plan: WorkoutPlan) {
+        if let index = workoutPlans.firstIndex(where: { $0.id == plan.id }) {
+            workoutPlans.remove(at: index)
+            saveWorkouts(workoutPlans)
         }
     }
 
-    private func saveWorkouts() {
-        if let encoded = try? JSONEncoder().encode(workoutPlans) {
-            UserDefaults.standard.set(encoded, forKey: "workoutPlans")
-        }
+    private func getTotalTime(_ plan: WorkoutPlan) -> Int {
+        plan.exercises.reduce(0) { $0 + $1.duration + $1.rest }
     }
 
-    private func loadWorkouts() {
-        if let savedData = UserDefaults.standard.data(forKey: "workoutPlans"),
-           let decoded = try? JSONDecoder().decode([WorkoutPlan].self, from: savedData)
-        {
-            workoutPlans = decoded
-        }
+    private func getTotalWorkTime(_ plan: WorkoutPlan) -> Int {
+        plan.exercises.reduce(0) { $0 + $1.duration }
+    }
+
+    private func getTotalRestTime(_ plan: WorkoutPlan) -> Int {
+        plan.exercises.reduce(0) { $0 + $1.rest }
+    }
+
+    private func formatDuration(_ seconds: Int) -> String {
+        let minutes = seconds / 60
+        let remainingSeconds = seconds % 60
+        return "\(minutes)m \(remainingSeconds)s"
     }
 }
-

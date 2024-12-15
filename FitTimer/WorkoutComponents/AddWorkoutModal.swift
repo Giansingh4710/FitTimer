@@ -2,8 +2,8 @@ import SwiftUI
 
 struct AddWorkoutModal: View {
     @Environment(\.dismiss) var dismiss
-    @Binding var workoutPlans: [WorkoutPlan]
-    @Binding var selectedWorkout: WorkoutPlan?
+    let saveNewWorkout: (WorkoutPlan) -> Void
+    
     @State private var workoutName: String = ""
     @State private var exerciseDuration: String = ""
     @State private var restDuration: String = ""
@@ -24,7 +24,7 @@ struct AddWorkoutModal: View {
 
                 Section(header: Text("Exercises")) {
                     Toggle("Bulk Input Mode", isOn: $isBulkInput)
-                    
+
                     if isBulkInput {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Enter exercises (one per line)")
@@ -61,7 +61,7 @@ struct AddWorkoutModal: View {
                     }
                 }
             }
-            .navigationTitle(selectedWorkout == nil ? "New Workout" : "Edit Workout")
+            .navigationTitle("New Workout")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -76,29 +76,19 @@ struct AddWorkoutModal: View {
                     .disabled(workoutName.isEmpty || exerciseDuration.isEmpty || restDuration.isEmpty || exercises.isEmpty)
                 }
             }
-            .onAppear {
-                if let workout = selectedWorkout {
-                    workoutName = workout.name
-                    exercises = workout.exercises.map { $0.name }
-                    if let firstExercise = workout.exercises.first {
-                        exerciseDuration = String(firstExercise.duration)
-                        restDuration = String(firstExercise.rest)
-                    }
-                }
-            }
         }
     }
 
     private func deleteExercise(at offsets: IndexSet) {
         exercises.remove(atOffsets: offsets)
     }
-    
+
     private func convertBulkExercises() {
         let newExercises = bulkExercises
             .split(separator: "\n")
             .map(String.init)
             .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        
+
         exercises = newExercises
         bulkExercises = ""
     }
@@ -107,11 +97,6 @@ struct AddWorkoutModal: View {
         guard let duration = Int(exerciseDuration), let rest = Int(restDuration) else { return }
         let newExercises = exercises.map { Exercise(name: $0, duration: duration, rest: rest) }
         let newWorkoutPlan = WorkoutPlan(name: workoutName, exercises: newExercises)
-        
-        if let index = workoutPlans.firstIndex(where: { $0.id == selectedWorkout?.id }) {
-            workoutPlans[index] = newWorkoutPlan
-        } else {
-            workoutPlans.append(newWorkoutPlan)
-        }
+        saveNewWorkout(newWorkoutPlan)
     }
-} 
+}

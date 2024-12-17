@@ -1,9 +1,11 @@
+import SwiftData
 import SwiftUI
 import UserNotifications
 
 struct AddActivityModal: View {
+    @Environment(\.modelContext) var modelContext
+
     @Environment(\.dismiss) var dismiss
-    @Binding var dailyActivities: [DailyActivity]
     @State private var activityName: String = "bob"
     @State private var notificationTimes: [Date] = [Date()]
     @State private var showingNotificationPermissionAlert = false
@@ -11,11 +13,18 @@ struct AddActivityModal: View {
     @State private var showingRandomTimesAlert = false
     @FocusState private var isNumberInputFocused: Bool
 
+    @State private var resetDaily: Bool = true
+
     var body: some View {
         NavigationView {
             Form {
+
                 Section(header: Text("Activity Details")) {
                     TextField("Activity Name", text: $activityName)
+                }
+
+                Section(header: Text("Have the Counter Reset to 0 Every Day?")) {
+                    Toggle("Reset Count Daily", isOn: $resetDaily)
                 }
 
                 Section(header: Text("Notification Times")) {
@@ -65,7 +74,7 @@ struct AddActivityModal: View {
                     Button("Save") {
                         saveActivity()
                     }
-                    .disabled(activityName.isEmpty || notificationTimes.isEmpty)
+                    .disabled(activityName.isEmpty)
                 }
             }
         }
@@ -76,8 +85,8 @@ struct AddActivityModal: View {
                 primaryButton: .default(
                     Text("Ok"),
                     action: {
-                        let newActivity = DailyActivity(name: activityName, count: 0, notifications: [])
-                        appendActivity(newActivity, &dailyActivities)
+                        let newActivity = DailyActivity(name: activityName, count: 0, notifications: [], resetDaily: resetDaily)
+                        modelContext.insert(newActivity)
                         dismiss()
                     }
                 ),
@@ -165,9 +174,9 @@ struct AddActivityModal: View {
                         Calendar.current.dateComponents([.hour, .minute], from: date)
                     }
 
-                    let newActivity = DailyActivity(name: activityName, count: 0, notifications: notificationComponents)
+                    let newActivity = DailyActivity(name: activityName, count: 0, notifications: notificationComponents, resetDaily: resetDaily)
                     print(newActivity)
-                    appendActivity(newActivity, &dailyActivities)
+                    modelContext.insert(newActivity)
 
                     scheduleNotifications(for: newActivity)
                 }
@@ -208,14 +217,5 @@ struct AddActivityModal: View {
                 }
             }
         }
-    }
-}
-
-// Helper extension to format time
-extension Date {
-    func formattedTime() -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: self)
     }
 }

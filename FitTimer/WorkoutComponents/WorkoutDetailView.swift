@@ -3,9 +3,7 @@ import SwiftUI
 struct WorkoutDetailView: View {
     @Environment(\.dismiss) var dismiss
     @State var plan: WorkoutPlan
-    let onSave: (WorkoutPlan) -> Void
     @State private var showingWorkout = false
-    @State private var showingEditor = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -13,6 +11,11 @@ struct WorkoutDetailView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .padding()
+            HStack(spacing: 8) {
+                Text("\(plan.exercises.count) exercises")
+                Text("•")
+                Text(formatDuration(getTotalWorkoutTime(plan)))
+            }
 
             ScrollView {
                 LazyVStack(spacing: 4) {
@@ -24,10 +27,7 @@ struct WorkoutDetailView: View {
             }
 
             VStack(spacing: 12) {
-                NavigationLink(destination: WorkoutEditorView(plan: plan, onSave: {
-                    onSave($0)
-                    plan = $0
-                })) {
+                NavigationLink(destination: WorkoutEditorView(plan: plan)) {
                     Label("Edit", systemImage: "pencil.circle.fill")
                         .font(.headline)
                         .foregroundColor(.white)
@@ -82,19 +82,20 @@ private struct ExerciseRow: View {
 
 struct WorkoutEditorView: View {
     @Environment(\.dismiss) var dismiss
-    // @Binding var bindedPlan: WorkoutPlan
     @State var plan: WorkoutPlan
-    let onSave: (WorkoutPlan) -> Void
+
+    @State private var draftName: String = ""
+    @State private var draftExercises: [Exercise] = []
 
     var body: some View {
         Form {
             Section(header: Text("Workout Details")) {
-                TextField("Workout Name", text: $plan.name)
+                TextField("Workout Name", text: $draftName)
                     .font(.headline)
             }
 
             Section(header: Text("Exercises")) {
-                ForEach($plan.exercises) { $exercise in
+                ForEach($draftExercises) { $exercise in
                     VStack(alignment: .leading, spacing: 8) {
                         TextField("Exercise Name", text: $exercise.name)
                             .font(.headline)
@@ -129,10 +130,15 @@ struct WorkoutEditorView: View {
         }
         .navigationTitle("Edit Workout")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            draftName = plan.name
+            draftExercises = plan.exercises.map { $0.copy() }
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
-                    onSave(plan)
+                    plan.name = draftName
+                    plan.exercises = draftExercises
                     dismiss()
                 }
             }
@@ -140,13 +146,13 @@ struct WorkoutEditorView: View {
     }
 
     private func addExercise() {
-        let duration = plan.exercises.last?.duration ?? 0
-        let rest = plan.exercises.last?.rest ?? 0
+        let duration = draftExercises.last?.duration ?? 0
+        let rest = draftExercises.last?.rest ?? 0
         let newExercise = Exercise(name: "", duration: duration, rest: rest)
-        plan.exercises.append(newExercise)
+        draftExercises.append(newExercise)
     }
 
     private func deleteExercise(at offsets: IndexSet) {
-        plan.exercises.remove(atOffsets: offsets)
+        draftExercises.remove(atOffsets: offsets)
     }
 }

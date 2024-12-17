@@ -1,1 +1,1 @@
-{"testsCount": 0, "failedTestsCount": 0, "usesSwiftTesting": false, "buildWarnings": [], "tests": [], "buildErrors": [], "testErrors": []}
+{"testsCount": 0, "failedTestsCount": 0, "usesSwiftTesting": false, "buildWarnings": [], "tests": [], "testErrors": [], "buildErrors": [{"source": "/Users/gians/Desktop/dev/mobile/FitTimer/FitTimer.xcodeproj", "message": ["Provisioning profile \"iOS Team Provisioning Profile: *\" doesn't include the currently selected device \"MacBook Pro\" (identifier 00006000-001038302222401E). (in target 'FitTimer' from project 'FitTimer')"]}]}

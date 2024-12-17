@@ -4,128 +4,133 @@ import UserNotifications
 struct ActivityDetailModal: View {
     @Environment(\.dismiss) var dismiss
     @State var activity: DailyActivity
-    @Binding var dailyActivities: [DailyActivity]
 
+    @State private var newName: String = ""
+    @State private var newCount: Int = 0
+    @State private var todayCount: Int = 0
     @State private var notificationTimes: [DateComponents] = []
+    @State private var newResetDaily: Bool = true
+    @State private var lastCountedDate: Date = .init()
+    @State private var createdAt: Date = .init()
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Activity Name Section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Activity Details")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        TextField("Activity Name", text: $activity.name)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding(.horizontal, 4)
+            List {
+                // Name Section
+                Section {
+                    TextField("Activity Name", text: $newName)
+                } header: {
+                    Text("Activity Details")
+                }
+
+                // Counter Section
+                Section {
+                    HStack(spacing: 20) {
+                        Label("Decrease", systemImage: "minus.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.accentColor)
+                            .frame(width: 60, height: 44)
+                            .onTapGesture {
+                                decrementCount()
+                            }
+
+                        Text("\(newCount)")
+                            .font(.system(size: 48, weight: .bold))
+                            .monospacedDigit()
+                            .frame(maxWidth: .infinity)
+
+                        Button(action: incrementCount) {
+                            Label("Increase", systemImage: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.accentColor)
+                        }
+                        .frame(width: 60, height: 44)
                     }
-                    .padding(.horizontal)
+                    .labelStyle(.iconOnly)
 
-                    // Counter Section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Daily Count")
-                            .font(.headline)
+                    HStack {
+                        Text("Created: ")
                             .foregroundColor(.secondary)
+                        Spacer()
+                        Text(formatedDate(createdAt))
+                    }.font(.subheadline)
+                    HStack {
+                        Text("Last counted")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(formatedDate(lastCountedDate))
+                    }.font(.subheadline)
+                } header: {
+                    Text("Counter")
+                }
 
+                // Settings Section
+                Section {
+                    Toggle("Reset Count Daily", isOn: $newResetDaily)
+                } header: {
+                    Text("Settings")
+                }
+
+                // Activity History Section
+                Section {
+                    if activity.history.count > 0 {
+                        DisclosureGroup("Activity History") {
+                            ForEach(activity.history, id: \.date) { entry in
+                                HStack {
+                                    Text(entry.date, style: .date)
+                                    Spacer()
+                                    Text("Count: \(entry.count)")
+                                        .bold()
+                                }
+                                .font(.subheadline)
+                            }
+                        }
+                    }
+                }
+
+                // Notifications Section
+                Section {
+                    ForEach(notificationTimes.indices, id: \.self) { index in
                         HStack {
-                            Spacer()
-                            Button(action: {
-                                if activity.count > 0 {
-                                    activity.count -= 1
-                                }
-                            }) {
+                            DatePicker(
+                                "Time",
+                                selection: Binding(
+                                    get: { Calendar.current.date(from: notificationTimes[index]) ?? Date() },
+                                    set: { newDate in
+                                        notificationTimes[index] = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                    }
+                                ),
+                                displayedComponents: .hourAndMinute
+                            )
+
+                            Button(action: { notificationTimes.remove(at: index) }) {
                                 Image(systemName: "minus.circle.fill")
-                                    .imageScale(.large)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(.red)
                             }
-                            .frame(width: 44, height: 44)
-                            .buttonStyle(BorderlessButtonStyle())
-
-                            Text("\(activity.count)")
-                                .font(.title2.bold())
-                                .frame(minWidth: 40)
-
-                            Button(action: {
-                                incrementCount()
-                            }) {
-                                Image(systemName: "plus.circle.fill")
-                                    .imageScale(.large)
-                                    .foregroundColor(.accentColor)
-                            }
-                            .frame(width: 44, height: 44)
-                            .buttonStyle(BorderlessButtonStyle())
-                            Spacer()
                         }
                     }
-                    .padding(.horizontal)
 
-                    // Notifications Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Daily Notifications")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-
-                        ForEach(notificationTimes.indices, id: \.self) { index in
-                            HStack {
-                                DatePicker(
-                                    "Notification \(index + 1)",
-                                    selection: Binding(
-                                        get: {
-                                            Calendar.current.date(from: notificationTimes[index]) ?? Date()
-                                        },
-                                        set: { newDate in
-                                            notificationTimes[index] = Calendar.current.dateComponents([.hour, .minute], from: newDate)
-                                        }
-                                    ),
-                                    displayedComponents: .hourAndMinute
-                                )
-                                .datePickerStyle(.compact)
-
-                                Spacer()
-
-                                Button(action: {
-                                    notificationTimes.remove(at: index)
-                                }) {
-                                    Image(systemName: "minus.circle.fill")
-                                        .foregroundColor(.red)
-                                }
-                            }
-                            .padding(.vertical, 4)
+                    Button(action: {
+                        notificationTimes.append(Calendar.current.dateComponents([.hour, .minute], from: Date()))
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Notification Time")
                         }
-
-                        Button(action: {
-                            let newComponents = Calendar.current.dateComponents([.hour, .minute], from: Date())
-                            notificationTimes.append(newComponents)
-                        }) {
-                            HStack {
-                                Image(systemName: "plus.circle.fill")
-                                Text("Add Notification Time")
-                            }
-                        }
-                        .padding(.top, 8)
-
-                        Text("Notifications will repeat daily at these times")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding(.top, 4)
                     }
-                    .padding(.horizontal)
+                } header: {
+                    Text("Daily Notifications")
+                }
 
-                    // Reset Button
+                // Reset Button Section
+                Section {
                     Button(role: .destructive) {
-                        activity.count = 0
+                        newCount = 0
                     } label: {
                         Text("Reset Count")
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red.opacity(0.1))
-                            .cornerRadius(10)
                     }
-                    .padding(.horizontal)
                 }
-                .padding(.vertical)
             }
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle("Edit Activity")
@@ -144,8 +149,24 @@ struct ActivityDetailModal: View {
             }
         }
         .onAppear {
-            // Initialize notification times from activity
+            newName = activity.name
+            newCount = activity.count
             notificationTimes = activity.notifications
+            newResetDaily = activity.resetDaily
+            lastCountedDate = activity.lastCounted
+            createdAt = activity.createdAt
+        }
+    }
+
+    private func incrementCount() {
+        newCount += 1
+        todayCount += 1
+    }
+
+    private func decrementCount() {
+        if newCount > 0 {
+            newCount -= 1
+            todayCount -= 1
         }
     }
 
@@ -154,9 +175,15 @@ struct ActivityDetailModal: View {
     }
 
     private func saveChanges() {
+        activity.name = newName
         activity.notifications = notificationTimes
+        activity.resetDaily = newResetDaily
+        if newCount != activity.count {
+            activity.lastCounted = Date()
+            activity.count = newCount
+            activity.todayCount = todayCount
+        }
         scheduleNotifications(for: activity)
-        updateActivity(activity, &dailyActivities)
         dismiss()
     }
 
@@ -188,13 +215,10 @@ struct ActivityDetailModal: View {
         }
     }
 
-    private func incrementCount() {
-        if let index = dailyActivities.firstIndex(where: { $0.id == activity.id }) {
-            dailyActivities[index].count += 1
-            // Update the activity count and save
-            updateActivity(dailyActivities[index], &dailyActivities)
-            // Log all activities to history
-            HistoryManager.shared.logActivityCounts(dailyActivities)
-        }
+    private func formatedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }

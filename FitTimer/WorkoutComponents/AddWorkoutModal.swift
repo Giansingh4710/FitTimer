@@ -2,12 +2,12 @@ import SwiftUI
 
 struct AddWorkoutModal: View {
     @Environment(\.dismiss) var dismiss
-    let saveNewWorkout: (WorkoutPlan) -> Void
-    
-    @State private var workoutName: String = ""
-    @State private var exerciseDuration: String = ""
-    @State private var restDuration: String = ""
-    @State private var exercises: [String] = []
+    @Environment(\.modelContext) var modelContext
+
+    @State private var workoutName: String = "Joe"
+    @State private var exerciseDuration: String = "5"
+    @State private var restDuration: String = "5"
+    @State private var exercises: [String] = ["Jump jacks"]
     @State private var isBulkInput: Bool = false
     @State private var bulkExercises: String = ""
 
@@ -70,7 +70,20 @@ struct AddWorkoutModal: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        saveWorkout()
+                        let exercisesObj = exercises.map {
+                            Exercise(
+                                name: $0,
+                                duration: Int(exerciseDuration) ?? 0,
+                                rest: Int(restDuration) ?? 0
+                            )
+                        }
+
+                        modelContext.insert(
+                            WorkoutPlan(
+                                name: workoutName,
+                                exercises: exercisesObj
+                            )
+                        )
                         dismiss()
                     }
                     .disabled(workoutName.isEmpty || exerciseDuration.isEmpty || restDuration.isEmpty || exercises.isEmpty)
@@ -91,12 +104,5 @@ struct AddWorkoutModal: View {
 
         exercises = newExercises
         bulkExercises = ""
-    }
-
-    private func saveWorkout() {
-        guard let duration = Int(exerciseDuration), let rest = Int(restDuration) else { return }
-        let newExercises = exercises.map { Exercise(name: $0, duration: duration, rest: rest) }
-        let newWorkoutPlan = WorkoutPlan(name: workoutName, exercises: newExercises)
-        saveNewWorkout(newWorkoutPlan)
     }
 }

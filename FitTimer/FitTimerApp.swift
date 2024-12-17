@@ -5,6 +5,7 @@
 //  Created by gian singh on 11/17/24.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
@@ -13,5 +14,10 @@ struct FitTimerApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [
+            Exercise.self,
+            WorkoutPlan.self,
+            DailyActivity.self,
+        ])
     }
 }

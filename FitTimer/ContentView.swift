@@ -5,15 +5,14 @@
 //  Created by gian singh on 11/17/24.
 //
 
+import SwiftData
 import SwiftUI
 import UserNotifications
 
 struct ContentView: View {
-    @State private var dailyActivities: [DailyActivity] = []
     @State private var activityToShow: DailyActivity? = nil
     @State private var showAddActivityModal = false
 
-    @State private var workoutPlans: [WorkoutPlan] = []
     @State private var isShowingAddWorkoutModal = false
 
     @State private var showingNotificationCenter = false
@@ -21,15 +20,14 @@ struct ContentView: View {
 
     // @State private var isShowingCalendarView = false
 
+    @Environment(\.modelContext) var modelContext
     var body: some View {
         NavigationView {
             List {
                 ListOfWorkouts(
-                    workoutPlans: $workoutPlans,
                     isShowingAddWorkoutModal: $isShowingAddWorkoutModal
                 )
                 ListOfDailyActivities(
-                    dailyActivities: $dailyActivities,
                     activityToShow: $activityToShow,
                     showAddActivityModal: $showAddActivityModal
                 )
@@ -46,33 +44,29 @@ struct ContentView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingNotificationCenter) {
-                NavigationView {
-                    NotificationCenterView()
-                }
-            }
-            .sheet(isPresented: $showingHistory) {
-                HistoryView()
-            }
         }
         .onAppear {
-            loadActivities(&dailyActivities)
-            loadWorkouts(&workoutPlans)
             requestNotificationPermission()
+        }
+        .sheet(isPresented: $showingNotificationCenter) {
+            NavigationView {
+                NotificationCenterView()
+            }
+        }
+        .sheet(isPresented: $showingHistory) {
+            // HistoryView()
         }
         // activity modals
         .sheet(isPresented: $showAddActivityModal) {
-            AddActivityModal(dailyActivities: $dailyActivities)
+            AddActivityModal()
         }
         .sheet(item: $activityToShow) { activity in
-            ActivityDetailModal(activity: activity, dailyActivities: $dailyActivities)
+            ActivityDetailModal(activity: activity)
         }
 
         // workout modals
         .sheet(isPresented: $isShowingAddWorkoutModal) {
-            AddWorkoutModal(saveNewWorkout: { (newWorkoutPlan: WorkoutPlan) in
-                pushWorkout(newWorkoutPlan, &workoutPlans)
-            })
+            AddWorkoutModal()
         }
     }
 
@@ -82,14 +76,6 @@ struct ContentView: View {
                 print("Notification permission error: \(error)")
             }
         }
-    }
-}
-
-struct ScaleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
     }
 }
 

@@ -1,11 +1,13 @@
-[!]  --- xcodebuild: Using the first of multiple matching destinations:
-{ platform:iOS Simulator, id:D0DEDDFA-CCBF-4A68-8B69-274DAA9D8AD9, OS:18.0, name:iPhone 16 }
-{ platform:iOS Simulator, id:D0DEDDFA-CCBF-4A68-8B69-274DAA9D8AD9, OS:18.0, name:iPhone 16 }
-Build Succeeded
+[x] /Users/gians/Desktop/dev/mobile/FitTimer/FitTimer.xcodeproj: Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the currently selected device "MacBook Pro" (identifier 00006000-001038302222401E). (in target 'FitTimer' from project 'FitTimer')
+** BUILD FAILED **
+
 
 -----------------------------
 -- xcodebuild.nvim summary --
 -----------------------------
 
-  ✔ Build Succeeded
+Errors:
+  ✖ Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the currently selected device "MacBook Pro" (identifier 00006000-001038302222401E). (in target 'FitTimer' from project 'FitTimer')
+
+  Build Failed
 

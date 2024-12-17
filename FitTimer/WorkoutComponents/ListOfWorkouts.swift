@@ -1,13 +1,15 @@
 import SwiftUI
+import SwiftData
 
 struct ListOfWorkouts: View {
-    @Binding var workoutPlans: [WorkoutPlan]
     @Binding var isShowingAddWorkoutModal: Bool
+    @Query private var workoutPlans: [WorkoutPlan]
+    @Environment(\.modelContext) var modelContext
 
     var body: some View {
         Section {
             ForEach(workoutPlans) { plan in
-                NavigationLink(destination: WorkoutDetailView(plan: plan, onSave: { newWorkoutPlan in updateWorkout(newWorkoutPlan, &workoutPlans) })) {
+                NavigationLink(destination: WorkoutDetailView(plan: plan)) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(plan.name)
@@ -17,7 +19,7 @@ struct ListOfWorkouts: View {
                             HStack(spacing: 8) {
                                 Text("\(plan.exercises.count) exercises")
                                 Text("•")
-                                Text(formatDuration(getTotalTime(plan)))
+                                Text(formatDuration(getTotalWorkoutTime(plan)))
                             }
                             .font(.system(.caption, design: .rounded))
                             .foregroundColor(.secondary)
@@ -25,12 +27,11 @@ struct ListOfWorkouts: View {
 
                         Spacer()
                     }
-                    // .padding(.vertical, 8)
-                    // .padding(.horizontal, 16)
                 }
                 .contextMenu {
                     Button("Delete", role: .destructive) {
                         deleteWorkout(plan)
+
                     }
                 }
                 .swipeActions(edge: .trailing) {
@@ -70,27 +71,6 @@ struct ListOfWorkouts: View {
     }
 
     private func deleteWorkout(_ plan: WorkoutPlan) {
-        if let index = workoutPlans.firstIndex(where: { $0.id == plan.id }) {
-            workoutPlans.remove(at: index)
-            saveWorkouts(workoutPlans)
-        }
-    }
-
-    private func getTotalTime(_ plan: WorkoutPlan) -> Int {
-        plan.exercises.reduce(0) { $0 + $1.duration + $1.rest }
-    }
-
-    private func getTotalWorkTime(_ plan: WorkoutPlan) -> Int {
-        plan.exercises.reduce(0) { $0 + $1.duration }
-    }
-
-    private func getTotalRestTime(_ plan: WorkoutPlan) -> Int {
-        plan.exercises.reduce(0) { $0 + $1.rest }
-    }
-
-    private func formatDuration(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let remainingSeconds = seconds % 60
-        return "\(minutes)m \(remainingSeconds)s"
+        modelContext.delete(plan) 
     }
 }

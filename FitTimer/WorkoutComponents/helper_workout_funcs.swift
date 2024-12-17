@@ -1,27 +1,26 @@
 import SwiftUI
 
-func pushWorkout(_ newWorkoutPlan: WorkoutPlan, _ workoutPlans: inout [WorkoutPlan]) {
-    workoutPlans.append(newWorkoutPlan)
-    saveWorkouts(workoutPlans)
+func getTotalWorkoutTime(_ plan: WorkoutPlan) -> Int {
+    plan.exercises.reduce(0) { $0 + $1.duration + $1.rest }
 }
 
-func updateWorkout(_ updatedPlan: WorkoutPlan, _ workoutPlans: inout [WorkoutPlan]) {
-    if let index = workoutPlans.firstIndex(where: { $0.id == updatedPlan.id }) {
-        workoutPlans[index] = updatedPlan
-        saveWorkouts(workoutPlans)
-    }
+func getTotalWorkTime(_ plan: WorkoutPlan) -> Int {
+    plan.exercises.reduce(0) { $0 + $1.duration }
 }
 
-func saveWorkouts(_ workoutPlans: [WorkoutPlan]) {
-    if let encoded = try? JSONEncoder().encode(workoutPlans) {
-        UserDefaults.standard.set(encoded, forKey: "workoutPlans")
-    }
+func getTotalRestTime(_ plan: WorkoutPlan) -> Int {
+    plan.exercises.reduce(0) { $0 + $1.rest }
 }
 
-func loadWorkouts(_ workoutPlans: inout [WorkoutPlan]) {
-    if let savedData = UserDefaults.standard.data(forKey: "workoutPlans"),
-       let decoded = try? JSONDecoder().decode([WorkoutPlan].self, from: savedData)
-    {
-        workoutPlans = decoded
-    }
+func formatDuration(_ seconds: Int) -> String {
+    let minutes = seconds / 60
+    let remainingSeconds = seconds % 60
+    return "\(minutes)m \(remainingSeconds)s"
+}
+
+func deepCopy<T: Codable>(_ object: T) -> T? {
+    guard let data = try? JSONEncoder().encode(object),
+          let copy = try? JSONDecoder().decode(T.self, from: data)
+    else { return nil }
+    return copy
 }

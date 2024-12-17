@@ -1,29 +1,21 @@
+import SwiftData
 import SwiftUI
 
 struct ListOfDailyActivities: View {
-    @Binding var dailyActivities: [DailyActivity]
     @Binding var activityToShow: DailyActivity?
     @Binding var showAddActivityModal: Bool
 
+    @Query private var dailyActivities: [DailyActivity]
     @State private var selectedActivity: DailyActivity? = nil
+    @Environment(\.modelContext) var modelContext
 
     var body: some View {
         Section {
-            ForEach($dailyActivities) { activity in
+            ForEach(dailyActivities) { activity in
                 ActivityRow(
                     activity: activity,
-                    activityToShow: $activityToShow,
-                    deleteAction: {
-                        if let index = dailyActivities.firstIndex(where: { $0.id == activity.id }) {
-                            let activity = dailyActivities[index]
-                            NotificationManager.shared.removeNotifications(for: activity)
-                            dailyActivities.remove(at: index)
-                            saveActivities(dailyActivities)
-                        }
-                    },
-                    saveAction: {
-                        saveActivities(dailyActivities)
-                    }
+                    selectActivity: { activityToShow = activity },
+                    deleteAction: { modelContext.delete(activity) }
                 )
             }
             Button(action: {
@@ -50,38 +42,18 @@ struct ListOfDailyActivities: View {
                 )
             }
         }
-    }
-
-    private func getNextNotification(for activity: DailyActivity) -> Date? {
-        let calendar = Calendar.current
-        let now = Date()
-
-        return activity.notifications.compactMap { components -> Date? in
-            var dateComponents = DateComponents()
-            dateComponents.hour = components.hour
-            dateComponents.minute = components.minute
-            dateComponents.day = calendar.component(.day, from: now)
-            dateComponents.month = calendar.component(.month, from: now)
-            dateComponents.year = calendar.component(.year, from: now)
-
-            guard let date = calendar.date(from: dateComponents) else { return nil }
-            return date > now ? date : calendar.date(byAdding: .day, value: 1, to: date)
-        }.min()
-    }
-
-    private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        .onAppear {
+            for activity in dailyActivities {
+                activity.updateIfNewDay()
+            }
+        }
     }
 }
 
 struct ActivityRow: View {
-    // @State var activity: DailyActivity
-    @Binding var activity: DailyActivity
-    @Binding var activityToShow: DailyActivity?
+    @State var activity: DailyActivity
+    let selectActivity: () -> Void
     let deleteAction: () -> Void
-    let saveAction: () -> Void
 
     @State private var showInputAlert = false
     @State private var addToCount = ""
@@ -91,6 +63,7 @@ struct ActivityRow: View {
             VStack(alignment: .leading) {
                 Text(activity.name).font(.headline)
                 Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
+                Text("Reset Count: \(activity.resetDaily ? "Daily" : "Never")").font(.caption).foregroundColor(.secondary)
             }
             Spacer()
             if let nextTime = activity.formatNextNotification() {
@@ -100,9 +73,9 @@ struct ActivityRow: View {
                 }
             }
             Spacer()
-            Button(action: { // button will run when whole row tapped. Not Warping here because has styling side effects
-                activityToShow = activity
-            }) {
+
+            // button will run when whole row tapped. Not Warping here because has styling side effects
+            Button(action: selectActivity) {
                 Text("Count: \(activity.count)").font(.subheadline)
             }
         }
@@ -110,8 +83,9 @@ struct ActivityRow: View {
             TextField("5", text: $addToCount).keyboardType(.numberPad)
             Button("OK", action: {
                 activity.count += Int(addToCount) ?? 0
+                activity.todayCount += Int(addToCount) ?? 0
+                activity.lastCounted = Date()
                 addToCount = ""
-                saveAction()
             })
             Button("Cancel", role: .cancel) {
                 addToCount = ""

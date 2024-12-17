@@ -154,7 +154,7 @@ struct WorkoutInProgressView: View {
             }
 
             if currentExerciseIndex >= plan.exercises.count {
-                HistoryManager.shared.logWorkoutCompletion(plan)
+                // HistoryManager.shared.logWorkoutCompletion(plan)
             }
         }
     }

@@ -1,12 +1,9 @@
 Command line invocation:
-    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build -project /Users/gians/Desktop/dev/mobile/FitTimer/FitTimer.xcodeproj -scheme FitTimer -destination id=D0DEDDFA-CCBF-4A68-8B69-274DAA9D8AD9 -parallelizeTargets
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build -project /Users/gians/Desktop/dev/mobile/FitTimer/FitTimer.xcodeproj -scheme FitTimer -destination id=00006000-001038302222401E -parallelizeTargets
 
 User defaults from command line:
     IDEPackageSupportUseBuiltinSCM = YES
 
---- xcodebuild: WARNING: Using the first of multiple matching destinations:
-{ platform:iOS Simulator, id:D0DEDDFA-CCBF-4A68-8B69-274DAA9D8AD9, OS:18.0, name:iPhone 16 }
-{ platform:iOS Simulator, id:D0DEDDFA-CCBF-4A68-8B69-274DAA9D8AD9, OS:18.0, name:iPhone 16 }
 Prepare packages
 
 ComputeTargetDependencyGraph
@@ -18,10 +15,23 @@ GatherProvisioningInputs
 
 CreateBuildDescription
 
-ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator18.0.sdk /Users/gians/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator18.0-22A3362-db63dc9361471f152f572502bdbfe70a.sdkstatcache
-    cd /Users/gians/Desktop/dev/mobile/FitTimer/FitTimer.xcodeproj
-    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator18.0.sdk -o /Users/gians/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator18.0-22A3362-db63dc9361471f152f572502bdbfe70a.sdkstatcache
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk -x c -c /dev/null
 
-** BUILD SUCCEEDED **
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/gians/Desktop/dev/mobile/FitTimer/FitTimer/Preview Content/Preview Assets.xcassets /Users/gians/Desktop/dev/mobile/FitTimer/FitTimer/Assets.xcassets
 
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 4bc4ec9464a302f80016febf625dd9c0
+Build description path: /Users/gians/Library/Developer/Xcode/DerivedData/FitTimer-diwhcmujslxsrphckaugpcccmjbx/Build/Intermediates.noindex/XCBuildData/4bc4ec9464a302f80016febf625dd9c0.xcbuilddata
+/Users/gians/Desktop/dev/mobile/FitTimer/FitTimer.xcodeproj: error: Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the currently selected device "MacBook Pro" (identifier 00006000-001038302222401E). (in target 'FitTimer' from project 'FitTimer')
+** BUILD FAILED **
+
+
+The following build commands failed:
+	Building project FitTimer with scheme FitTimer
+(1 failure)
 

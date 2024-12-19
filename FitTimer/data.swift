@@ -7,14 +7,12 @@ class Exercise {
     var name: String
     var duration: Int // in seconds
     var rest: Int // in seconds
-    var notifications: [DateComponents]
 
-    init(name: String, duration: Int, rest: Int, notifications: [DateComponents] = []) {
+    init(name: String, duration: Int, rest: Int) {
         id = UUID()
         self.name = name
         self.duration = duration
         self.rest = rest
-        self.notifications = notifications
     }
 
     func copy() -> Exercise {
@@ -25,14 +23,18 @@ class Exercise {
 @Model
 class WorkoutPlan {
     @Attribute(.unique) var id: UUID
-    var name: String
     var createdAt: Date
+    var name: String
+    var notifications: [DateComponents]
+    var completedHistory: [Date]
     @Relationship(deleteRule: .cascade) var exercises: [Exercise]
 
-    init(name: String, exercises: [Exercise] = []) {
+    init(name: String, exercises: [Exercise] = [], notifications: [DateComponents] = []) {
         id = UUID()
         createdAt = Date()
+        completedHistory = []
         self.name = name
+        self.notifications = notifications
         self.exercises = exercises
     }
 }
@@ -48,7 +50,7 @@ class ActivityHistory {
 }
 
 @Model
-class DailyActivity {
+class Activity {
     @Attribute(.unique) var id: UUID
     var createdAt: Date
     var name: String
@@ -57,16 +59,16 @@ class DailyActivity {
 
     var resetDaily: Bool
     var lastCounted: Date
-    var history: [ActivityHistory]
     var todayCount: Int
+    @Relationship(deleteRule: .cascade) var history: [ActivityHistory]
 
     init(id: UUID = UUID(), name: String, count: Int = 0, notifications: [DateComponents] = [], resetDaily: Bool = true) {
         self.id = id
-        createdAt = Date()
         self.name = name
         self.count = count
         self.notifications = notifications
         self.resetDaily = resetDaily
+        createdAt = Date()
         lastCounted = Date()
         todayCount = 0
         history = []
@@ -98,16 +100,15 @@ class DailyActivity {
 
         // Check if the last reset was on a different day
         if !calendar.isDate(lastCounted, inSameDayAs: now) {
-            print(count, todayCount, now, lastCounted, todayCount)
-            history.append(ActivityHistory(count: todayCount, date: now))
+            if todayCount != 0 {
+                history.append(ActivityHistory(count: todayCount, date: now))
+            }
 
             if resetDaily {
                 count = 0
             }
             lastCounted = now
             todayCount = 0
-            // If you're using CoreData or another persistence method:
-            // try? modelContext.save()
         }
     }
 }

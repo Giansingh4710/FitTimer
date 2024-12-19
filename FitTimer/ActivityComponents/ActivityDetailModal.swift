@@ -3,7 +3,8 @@ import UserNotifications
 
 struct ActivityDetailModal: View {
     @Environment(\.dismiss) var dismiss
-    @State var activity: DailyActivity
+    @EnvironmentObject private var lnManager: LocalNotificationManager
+    @State var activity: Activity
 
     @State private var newName: String = ""
     @State private var newCount: Int = 0
@@ -12,6 +13,8 @@ struct ActivityDetailModal: View {
     @State private var newResetDaily: Bool = true
     @State private var lastCountedDate: Date = .init()
     @State private var createdAt: Date = .init()
+
+    @State private var showingNotificationPermissionAlert = false
 
     var body: some View {
         NavigationView {
@@ -143,14 +146,33 @@ struct ActivityDetailModal: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        saveChanges()
+                        Task {
+                            await saveChanges()
+                        }
                     }
                 }
             }
         }
+        .alert(isPresented: $showingNotificationPermissionAlert) {
+            Alert(
+                title: Text("Turn On Notifications"),
+                message: Text("Can't send notifications without permission. If you click OK, you will basically have a counter and won't get any reminders"),
+                primaryButton: .default(
+                    Text("Ok"),
+                    action: {
+                        activity.notifications = []
+                    }
+                ),
+                secondaryButton: .cancel(
+                    Text("Cancel"),
+                    action: {}
+                )
+            )
+        }
         .onAppear {
             newName = activity.name
             newCount = activity.count
+            todayCount = activity.todayCount
             notificationTimes = activity.notifications
             newResetDaily = activity.resetDaily
             lastCountedDate = activity.lastCounted
@@ -164,55 +186,28 @@ struct ActivityDetailModal: View {
     }
 
     private func decrementCount() {
-        if newCount > 0 {
-            newCount -= 1
-            todayCount -= 1
+        newCount -= 1
+        todayCount -= 1
+    }
+
+    private func saveChanges() async {
+        if notificationTimes.count > 0 {
+            if lnManager.isGranted == false {
+                showingNotificationPermissionAlert = true
+                return
+            }
         }
-    }
 
-    private func deleteNotificationTime(at offsets: IndexSet) {
-        notificationTimes.remove(atOffsets: offsets)
-    }
-
-    private func saveChanges() {
-        activity.name = newName
         activity.notifications = notificationTimes
+        await lnManager.scheduleNotificationsForActivity(activity: activity)
+        activity.name = newName
         activity.resetDaily = newResetDaily
         if newCount != activity.count {
             activity.lastCounted = Date()
             activity.count = newCount
             activity.todayCount = todayCount
         }
-        scheduleNotifications(for: activity)
         dismiss()
-    }
-
-    private func scheduleNotifications(for activity: DailyActivity) {
-        let center = UNUserNotificationCenter.current()
-
-        // Remove existing notifications
-        center.removePendingNotificationRequests(withIdentifiers:
-            activity.notifications.map { "\(activity.id)_\($0.hour ?? 0)_\($0.minute ?? 0)" }
-        )
-
-        // Schedule new notifications
-        for components in activity.notifications {
-            let content = UNMutableNotificationContent()
-            content.title = "Time for \(activity.name)!"
-            content.body = "Track your progress by adding to your daily count."
-            content.sound = .default
-            content.badge = 1
-
-            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-            let identifier = "\(activity.id)_\(components.hour ?? 0)_\(components.minute ?? 0)"
-            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-
-            center.add(request) { error in
-                if let error = error {
-                    print("Error scheduling notification: \(error)")
-                }
-            }
-        }
     }
 
     private func formatedDate(_ date: Date) -> String {

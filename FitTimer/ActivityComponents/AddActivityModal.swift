@@ -4,7 +4,7 @@ import UserNotifications
 
 struct AddActivityModal: View {
     @Environment(\.modelContext) var modelContext
-
+    @EnvironmentObject private var lnManager: LocalNotificationManager
     @Environment(\.dismiss) var dismiss
     @State private var activityName: String = "bob"
     @State private var notificationTimes: [Date] = [Date()]
@@ -18,7 +18,6 @@ struct AddActivityModal: View {
     var body: some View {
         NavigationView {
             Form {
-
                 Section(header: Text("Activity Details")) {
                     TextField("Activity Name", text: $activityName)
                 }
@@ -72,7 +71,9 @@ struct AddActivityModal: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        saveActivity()
+                        Task {
+                            await saveActivity()
+                        }
                     }
                     .disabled(activityName.isEmpty)
                 }
@@ -80,20 +81,20 @@ struct AddActivityModal: View {
         }
         .alert(isPresented: $showingNotificationPermissionAlert) {
             Alert(
-                title: Text("Notification Permission Required to Get Reminders"),
-                message: Text("if you click OK, you will basically have a counter and won't get any reminders"),
+                title: Text("Turn On Notifications"),
+                message: Text("Notification Permissions Required to Get Reminders. If you click OK, you will basically have a counter and won't get any reminders"),
                 primaryButton: .default(
                     Text("Ok"),
                     action: {
-                        let newActivity = DailyActivity(name: activityName, count: 0, notifications: [], resetDaily: resetDaily)
+                        let newActivity = Activity(name: activityName, count: 0, notifications: [], resetDaily: resetDaily)
                         modelContext.insert(newActivity)
                         dismiss()
                     }
                 ),
-                secondaryButton: .destructive(
+                secondaryButton: .cancel(
                     Text("Cancel"),
                     action: {
-                        dismiss()
+                        // dismiss()
                     }
                 )
             )
@@ -103,16 +104,6 @@ struct AddActivityModal: View {
         } message: {
             Text("Please enter a number between 1 and 100")
         }
-        // .alert("Notification Permission Required", isPresented: $showingNotificationPermissionAlert) {
-        //     Button("Open Settings", role: .none) {
-        //         if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-        //             UIApplication.shared.open(settingsURL)
-        //         }
-        //     }
-        //     Button("Cancel", role: .cancel) {}
-        // } message: {
-        //     Text("Please enable notifications in Settings to receive activity reminders.")
-        // }
     }
 
     private func deleteNotificationTime(at offsets: IndexSet) {
@@ -164,58 +155,20 @@ struct AddActivityModal: View {
         // numberOfRandomTimes = ""
     }
 
-    private func saveActivity() {
-        let center = UNUserNotificationCenter.current()
-
-        center.getNotificationSettings { settings in
-            if settings.authorizationStatus == .authorized {
-                DispatchQueue.main.async {
-                    let notificationComponents = notificationTimes.map { date in
-                        Calendar.current.dateComponents([.hour, .minute], from: date)
-                    }
-
-                    let newActivity = DailyActivity(name: activityName, count: 0, notifications: notificationComponents, resetDaily: resetDaily)
-                    print(newActivity)
-                    modelContext.insert(newActivity)
-
-                    scheduleNotifications(for: newActivity)
-                }
-                dismiss()
-            } else {
-                showingNotificationPermissionAlert = true
-            }
+    private func saveActivity() async {
+        if lnManager.isGranted == false {
+            showingNotificationPermissionAlert = true
+            return
         }
-    }
 
-    private func scheduleNotifications(for activity: DailyActivity) {
-        let center = UNUserNotificationCenter.current()
-
-        // Remove any existing notifications for this activity
-        center.removePendingNotificationRequests(withIdentifiers:
-            activity.notifications.map { "\(activity.id)_\($0.hour ?? 0)_\($0.minute ?? 0)" }
-        )
-
-        // Schedule new notifications
-        for components in activity.notifications {
-            var dateComponents = DateComponents()
-            dateComponents.hour = components.hour
-            dateComponents.minute = components.minute
-
-            let content = UNMutableNotificationContent()
-            content.title = "Time for \(activity.name)!"
-            content.body = "Track your progress by adding to your daily count."
-            content.sound = .default
-            content.badge = 1
-
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            let identifier = "\(activity.id)_\(components.hour ?? 0)_\(components.minute ?? 0)"
-            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-
-            center.add(request) { error in
-                if let error = error {
-                    print("Error scheduling notification: \(error)")
-                }
-            }
+        let notificationComponents = notificationTimes.map { date in
+            Calendar.current.dateComponents([.hour, .minute], from: date)
         }
+
+        let newActivity = Activity(name: activityName, count: 0, notifications: notificationComponents, resetDaily: resetDaily)
+        modelContext.insert(newActivity)
+
+        await lnManager.scheduleNotificationsForActivity(activity: newActivity)
+        dismiss()
     }
 }

@@ -10,15 +10,16 @@ import SwiftUI
 import UserNotifications
 
 struct ContentView: View {
-    @State private var activityToShow: DailyActivity? = nil
+    @EnvironmentObject private var lnManager: LocalNotificationManager
+    @Environment(\.scenePhase) private var scenePhase
+
+    @State private var activityToShow: Activity? = nil
     @State private var showAddActivityModal = false
 
     @State private var isShowingAddWorkoutModal = false
-
-    @State private var showingNotificationCenter = false
     @State private var showingHistory = false
 
-    // @State private var isShowingCalendarView = false
+    @State private var showingNotificationCenter = false
 
     @Environment(\.modelContext) var modelContext
     var body: some View {
@@ -27,13 +28,19 @@ struct ContentView: View {
                 ListOfWorkouts(
                     isShowingAddWorkoutModal: $isShowingAddWorkoutModal
                 )
-                ListOfDailyActivities(
+                ListOfActivities(
                     activityToShow: $activityToShow,
                     showAddActivityModal: $showAddActivityModal
                 )
 
-                Button(action: { showingHistory = true }) {
-                    Label("View History", systemImage: "calendar")
+                Section {
+                    if lnManager.isGranted {
+                        ForEach(lnManager.pendingRequests, id: \.identifier) { request in
+                            NotificationBar(request: request)
+                        }
+                    }
+                } header: {
+                    Text("Notifications")
                 }
             }
             .navigationTitle("Fit Timer")
@@ -45,8 +52,19 @@ struct ContentView: View {
                 }
             }
         }
+        .task {
+            try? await lnManager.requestAuthorization()
+        }
+        .onChange(of: scenePhase) { newValue in
+            if newValue == .active {
+                Task {
+                    await lnManager.getCurrentSettings()
+                    await lnManager.getPendingRequests()
+                }
+            }
+        }
         .onAppear {
-            requestNotificationPermission()
+            // requestNotificationPermission()
         }
         .sheet(isPresented: $showingNotificationCenter) {
             NavigationView {
@@ -71,9 +89,11 @@ struct ContentView: View {
     }
 
     private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, error in
-            if let error = error {
-                print("Notification permission error: \(error)")
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { success, error in
+            if success {
+                print("Notification permission granted")
+            } else if let error {
+                print("Notification permission error: \(error.localizedDescription)")
             }
         }
     }

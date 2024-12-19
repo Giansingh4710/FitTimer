@@ -20,6 +20,7 @@ struct ListOfWorkouts: View {
                                 Text("\(plan.exercises.count) exercises")
                                 Text("•")
                                 Text(formatDuration(getTotalWorkoutTime(plan)))
+                                Text("•")
                             }
                             .font(.system(.caption, design: .rounded))
                             .foregroundColor(.secondary)

@@ -15,7 +15,11 @@ struct WorkoutDetailView: View {
                 Text("\(plan.exercises.count) exercises")
                 Text("•")
                 Text(formatDuration(getTotalWorkoutTime(plan)))
+                Text("•")
+                Text("\(plan.completedHistory.count) workouts completed")
             }
+            .font(.system(.caption, design: .rounded))
+            .foregroundColor(.secondary)
 
             ScrollView {
                 LazyVStack(spacing: 4) {
@@ -52,7 +56,10 @@ struct WorkoutDetailView: View {
         .fullScreenCover(isPresented: $showingWorkout) {
             WorkoutInProgressView(
                 plan: plan,
-                onComplete: { showingWorkout = false },
+                onComplete: {
+                    showingWorkout = false
+                    plan.completedHistory.append(Date())
+                },
                 onCancel: { showingWorkout = false }
             )
         }
@@ -90,15 +97,13 @@ struct WorkoutEditorView: View {
     var body: some View {
         Form {
             Section(header: Text("Workout Details")) {
-                TextField("Workout Name", text: $draftName)
-                    .font(.headline)
+                TextField("Workout Name", text: $draftName).font(.headline)
             }
 
             Section(header: Text("Exercises")) {
                 ForEach($draftExercises) { $exercise in
                     VStack(alignment: .leading, spacing: 8) {
-                        TextField("Exercise Name", text: $exercise.name)
-                            .font(.headline)
+                        TextField("Exercise Name", text: $exercise.name).font(.headline)
 
                         HStack(spacing: 16) {
                             HStack {

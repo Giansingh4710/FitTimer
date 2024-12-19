@@ -34,7 +34,7 @@
 //         saveHistory()
 //     }
 //     
-//     func logActivityCounts(_ activities: [DailyActivity]) {
+//     func logActivityCounts(_ activities: [Activity]) {
 //         let activityCounts = activities.map { activity in
 //             ActivityCount(
 //                 id: UUID(),

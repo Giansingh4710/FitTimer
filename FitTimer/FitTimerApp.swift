@@ -10,14 +10,15 @@ import SwiftUI
 
 @main
 struct FitTimerApp: App {
+    @StateObject var lnManager = LocalNotificationManager()
     var body: some Scene {
         WindowGroup {
             ContentView()
         }
+        .environmentObject(lnManager)
         .modelContainer(for: [
-            Exercise.self,
             WorkoutPlan.self,
-            DailyActivity.self,
+            Activity.self,
         ])
     }
 }

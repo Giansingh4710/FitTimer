@@ -1,36 +1,40 @@
 import SwiftData
 import SwiftUI
 
-struct ListOfDailyActivities: View {
-    @Binding var activityToShow: DailyActivity?
+struct ListOfActivities: View {
+    @Binding var activityToShow: Activity?
     @Binding var showAddActivityModal: Bool
 
-    @Query private var dailyActivities: [DailyActivity]
-    @State private var selectedActivity: DailyActivity? = nil
+    @Query private var activities: [Activity]
+    @State private var selectedActivity: Activity? = nil
     @Environment(\.modelContext) var modelContext
+    @EnvironmentObject private var lnManager: LocalNotificationManager
 
     var body: some View {
         Section {
-            ForEach(dailyActivities) { activity in
+            ForEach(activities) { activity in
                 ActivityRow(
                     activity: activity,
                     selectActivity: { activityToShow = activity },
-                    deleteAction: { modelContext.delete(activity) }
+                    deleteAction: {
+                        modelContext.delete(activity)
+                        lnManager.removeNotificationsForActivity(activity: activity)
+                    }
                 )
             }
             Button(action: {
                 showAddActivityModal = true
             }) {
-                Label("Add Daily Activity", systemImage: "plus.circle.fill")
+                Label("Add Activity", systemImage: "plus.circle.fill")
                     .foregroundColor(.accentColor)
             }
         } header: {
             HStack {
-                Text("Daily Activities")
+                Text("Activities")
                     .font(.title2)
                     .bold()
                 InfoButton(
-                    title: "✨ Daily Activities",
+                    title: "✨ Activities",
                     message: """
                     Build healthy habits throughout your day!
 
@@ -43,15 +47,18 @@ struct ListOfDailyActivities: View {
             }
         }
         .onAppear {
-            for activity in dailyActivities {
+            for activity in activities {
                 activity.updateIfNewDay()
+                Task {
+                    await lnManager.scheduleNotificationsForActivity(activity: activity)
+                }
             }
         }
     }
 }
 
 struct ActivityRow: View {
-    @State var activity: DailyActivity
+    @State var activity: Activity
     let selectActivity: () -> Void
     let deleteAction: () -> Void
 
@@ -63,7 +70,7 @@ struct ActivityRow: View {
             VStack(alignment: .leading) {
                 Text(activity.name).font(.headline)
                 Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
-                Text("Reset Count: \(activity.resetDaily ? "Daily" : "Never")").font(.caption).foregroundColor(.secondary)
+                // Text("Reset Count: \(activity.resetDaily ? "Daily" : "Never")").font(.caption).foregroundColor(.secondary)
             }
             Spacer()
             if let nextTime = activity.formatNextNotification() {
@@ -80,16 +87,9 @@ struct ActivityRow: View {
             }
         }
         .alert("How many \(activity.name)s did you do?", isPresented: $showInputAlert) {
-            TextField("5", text: $addToCount).keyboardType(.numberPad)
-            Button("OK", action: {
-                activity.count += Int(addToCount) ?? 0
-                activity.todayCount += Int(addToCount) ?? 0
-                activity.lastCounted = Date()
-                addToCount = ""
-            })
-            Button("Cancel", role: .cancel) {
-                addToCount = ""
-            }
+            TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
+            Button("OK", action: incrementCount)
+            Button("Cancel", role: .cancel, action: { addToCount = "" })
         }
         .swipeActions(edge: .leading) {
             Button {
@@ -105,5 +105,12 @@ struct ActivityRow: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+    }
+
+    private func incrementCount() {
+        activity.count += Int(addToCount) ?? 0
+        activity.todayCount += Int(addToCount) ?? 0
+        activity.lastCounted = Date()
+        addToCount = ""
     }
 }

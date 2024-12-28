@@ -17,7 +17,6 @@ struct ContentView: View {
     @State private var showAddActivityModal = false
 
     @State private var isShowingAddWorkoutModal = false
-    @State private var showingHistory = false
 
     @State private var showingNotificationCenter = false
 
@@ -32,15 +31,8 @@ struct ContentView: View {
                     activityToShow: $activityToShow,
                     showAddActivityModal: $showAddActivityModal
                 )
-
-                Section {
-                    if lnManager.isGranted {
-                        ForEach(lnManager.pendingRequests, id: \.identifier) { request in
-                            NotificationBar(request: request)
-                        }
-                    }
-                } header: {
-                    Text("Notifications")
+                Button(action: { showingNotificationCenter = true }) {
+                    Text("Notifications: \(lnManager.pendingRequests.count)")
                 }
             }
             .navigationTitle("Fit Timer")
@@ -68,11 +60,8 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingNotificationCenter) {
             NavigationView {
-                NotificationCenterView()
+                UpcomingNotificationsView()
             }
-        }
-        .sheet(isPresented: $showingHistory) {
-            // HistoryView()
         }
         // activity modals
         .sheet(isPresented: $showAddActivityModal) {

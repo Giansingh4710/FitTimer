@@ -16,6 +16,9 @@ struct ActivityDetailModal: View {
 
     @State private var showingNotificationPermissionAlert = false
 
+    @State private var numberOfRandomTimes: String = ""
+    @State private var showingRandomTimesAlert = false
+
     var body: some View {
         NavigationView {
             List {
@@ -91,39 +94,10 @@ struct ActivityDetailModal: View {
                     }
                 }
 
-                // Notifications Section
-                Section {
-                    ForEach(notificationTimes.indices, id: \.self) { index in
-                        HStack {
-                            DatePicker(
-                                "Time",
-                                selection: Binding(
-                                    get: { Calendar.current.date(from: notificationTimes[index]) ?? Date() },
-                                    set: { newDate in
-                                        notificationTimes[index] = Calendar.current.dateComponents([.hour, .minute], from: newDate)
-                                    }
-                                ),
-                                displayedComponents: .hourAndMinute
-                            )
-
-                            Button(action: { notificationTimes.remove(at: index) }) {
-                                Image(systemName: "minus.circle.fill")
-                                    .foregroundColor(.red)
-                            }
-                        }
-                    }
-
-                    Button(action: {
-                        notificationTimes.append(Calendar.current.dateComponents([.hour, .minute], from: Date()))
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Notification Time")
-                        }
-                    }
-                } header: {
-                    Text("Daily Notifications")
-                }
+                AddNotificationView(
+                    numberOfRandomTimes: $numberOfRandomTimes,
+                    notificationTimes: $notificationTimes
+                )
 
                 // Reset Button Section
                 Section {

@@ -71,28 +71,38 @@ class LocalNotificationManager: NSObject, ObservableObject, UNUserNotificationCe
         notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
         if let index = pendingRequests.firstIndex(where: { $0.identifier == identifier }) {
             pendingRequests.remove(at: index)
-            print("Pending: \(pendingRequests.count)")
         }
     }
 
     func removeNotificationsForActivity(activity: Activity) {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers:
-            activity.notifications.map { "\(activity.id)_\(activity.name)_\($0.hour ?? 0)_\($0.minute ?? 0)" }
-        ) 
+        var newPendingRequests: [UNNotificationRequest] = []
+        var uuidsToRemove: [String] = []
+        for request in pendingRequests {
+            if request.identifier.hasPrefix(activity.id.uuidString) {
+                uuidsToRemove.append(request.identifier)
+            } else {
+                newPendingRequests.append(request)
+            }
+        }
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: uuidsToRemove)
 
-        pendingRequests.removeAll(where: { $0.identifier.contains(activity.id.uuidString) })
+        print("before removal: \(pendingRequests.count), \(activity.id.uuidString)")
+        pendingRequests = newPendingRequests
+        print("after removal: \(pendingRequests.count)")
     }
 
     func scheduleNotificationsForActivity(activity: Activity) async {
-        removeNotificationsForActivity(activity: activity) // do i need this because if same identifier will be overwritten
+        removeNotificationsForActivity(activity: activity)
 
+        print("Before Schedule: \(pendingRequests.count)")
+        await getPendingRequests()
         for components in activity.notifications {
             var dateComponents = DateComponents()
             dateComponents.hour = components.hour
             dateComponents.minute = components.minute
 
             await scheduleCalendarNotification(
-                identifier: "\(activity.id)_\(activity.name)_\(components.hour ?? 0)_\(components.minute ?? 0)",
+                identifier: makeNotificationIdString(activity, dateComponents),
                 title: "\(activity.name)",
                 body: "Track your progress by adding to your daily count.",
                 subtitle: "Time for \(activity.name)!",
@@ -100,11 +110,16 @@ class LocalNotificationManager: NSObject, ObservableObject, UNUserNotificationCe
                 repeats: true
             )
         }
+        print("After Schedule: \(pendingRequests.count)")
     }
 
     func clearRequests() {
         notificationCenter.removeAllPendingNotificationRequests()
         pendingRequests.removeAll()
-        print("Pending: \(pendingRequests.count)")
+        print("After Clear Pending: \(pendingRequests.count) == 0")
     }
+}
+
+func makeNotificationIdString(_ activity: Activity, _ components: DateComponents) -> String {
+    return "\(activity.id)_\(activity.name)_\(components.hour ?? 0)_\(components.minute ?? 0)"
 }

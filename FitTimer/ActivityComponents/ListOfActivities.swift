@@ -17,8 +17,10 @@ struct ListOfActivities: View {
                     activity: activity,
                     selectActivity: { activityToShow = activity },
                     deleteAction: {
-                        modelContext.delete(activity)
-                        lnManager.removeNotificationsForActivity(activity: activity)
+                        Task {
+                            await lnManager.removeNotificationsForActivity(activity: activity)
+                            modelContext.delete(activity)
+                        }
                     }
                 )
             }

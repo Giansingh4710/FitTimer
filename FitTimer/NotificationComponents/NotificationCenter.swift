@@ -1,51 +1,33 @@
 import SwiftData
 import SwiftUI
 
-struct NotificationCenterView: View {
-    @State private var selectedTab = 0
-    @Query private var activities: [Activity]
-    @Query private var workoutPlans: [WorkoutPlan]
-
-    var body: some View {
-        VStack {
-            Picker("Notification Type", selection: $selectedTab) {
-                Text("Upcoming").tag(0)
-                Text("History").tag(1)
-            }
-            .pickerStyle(.segmented)
-            .padding()
-
-            if selectedTab == 0 {
-                UpcomingNotificationsView()
-            } else {
-                // DeliveredNotificationsView(notifications: notificationManager.deliveredNotifications)
-            }
-        }
-        .navigationTitle("Notifications")
-    }
-}
-
 struct UpcomingNotificationsView: View {
     @EnvironmentObject private var lnManager: LocalNotificationManager
 
     var body: some View {
-        if lnManager.isGranted == false {
-            Button("Enable Notifications") {
-                lnManager.openSettings()
-            }
-        } else if lnManager.pendingRequests.isEmpty {
-            EmptyStateView(
-                title: "No Upcoming Notifications",
-                systemImage: "bell.slash",
-                description: "Add notifications to your activities to see them here"
-            )
-        } else {
-            List {
-                ForEach(lnManager.pendingRequests, id: \.identifier) { request in
-                    NotificationBar(request: request)
+        List {
+            Section {
+                if lnManager.isGranted == false {
+                    Button("Enable Notifications") {
+                        lnManager.openSettings()
+                    }
+                } else if lnManager.pendingRequests.isEmpty {
+                    EmptyStateView(
+                        title: "No Upcoming Notifications",
+                        systemImage: "bell.slash",
+                        description: "Add notifications to your activities to see them here"
+                    )
+                } else {
+                    ForEach(lnManager.pendingRequests, id: \.identifier) { request in
+                        NotificationBar(request: request)
+                    }
                 }
+            } header: {
+                Text("Notifications")
             }
-            .toolbar {
+        }
+        .toolbar {
+            if !lnManager.pendingRequests.isEmpty {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         lnManager.clearRequests()

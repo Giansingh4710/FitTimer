@@ -1,0 +1,3 @@
+Import export workouts/activities csv
+
+Click notification to take you to an activity or workout.

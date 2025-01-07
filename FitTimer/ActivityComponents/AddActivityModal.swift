@@ -6,12 +6,12 @@ struct AddActivityModal: View {
     @Environment(\.modelContext) var modelContext
     @EnvironmentObject private var lnManager: LocalNotificationManager
     @Environment(\.dismiss) var dismiss
-    @State private var activityName: String = "bob"
-    @State private var showingNotificationPermissionAlert = false
+    @State private var activityName: String = ""
     @FocusState private var isNumberInputFocused: Bool
 
     @State var numberOfRandomTimes: String = ""
     @State var notificationTimes: [DateComponents] = []
+    @State var notificationText: NotificationTextData = .init(title: "", body: "")
 
     @State private var resetDaily: Bool = true
 
@@ -28,7 +28,8 @@ struct AddActivityModal: View {
 
                 AddNotificationView(
                     numberOfRandomTimes: $numberOfRandomTimes,
-                    notificationTimes: $notificationTimes
+                    notificationTimes: $notificationTimes,
+                    notificationText: $notificationText
                 )
             }
             .navigationTitle("New Activity")
@@ -48,26 +49,6 @@ struct AddActivityModal: View {
                 }
             }
         }
-        .alert(isPresented: $showingNotificationPermissionAlert) {
-            Alert(
-                title: Text("Turn On Notifications"),
-                message: Text("Notification Permissions Required to Get Reminders. If you click OK, you will basically have a counter and won't get any reminders"),
-                primaryButton: .default(
-                    Text("Ok"),
-                    action: {
-                        let newActivity = Activity(name: activityName, count: 0, notifications: [], resetDaily: resetDaily)
-                        modelContext.insert(newActivity)
-                        dismiss()
-                    }
-                ),
-                secondaryButton: .cancel(
-                    Text("Cancel"),
-                    action: {
-                        // dismiss()
-                    }
-                )
-            )
-        }
         .onAppear {
             notificationTimes.append(Calendar.current.dateComponents([.hour, .minute], from: Date()))
         }
@@ -78,15 +59,10 @@ struct AddActivityModal: View {
     }
 
     private func saveActivity() async {
-        if lnManager.isGranted == false {
-            showingNotificationPermissionAlert = true
-            return
-        }
-
         let newActivity = Activity(name: activityName, count: 0, notifications: notificationTimes, resetDaily: resetDaily)
         modelContext.insert(newActivity)
 
-        await lnManager.scheduleNotificationsForActivity(activity: newActivity)
+        await lnManager.scheduleNotifications(for: newActivity)
         dismiss()
     }
 }

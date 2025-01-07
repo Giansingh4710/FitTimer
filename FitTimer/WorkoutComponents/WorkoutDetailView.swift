@@ -15,8 +15,11 @@ struct WorkoutDetailView: View {
                 Text("\(plan.exercises.count) exercises")
                 Text("•")
                 Text(formatDuration(getTotalWorkoutTime(plan)))
-                Text("•")
+            }
+            HStack(spacing: 8) {
                 Text("\(plan.completedHistory.count) workouts completed")
+                Text("•")
+                Text("\(plan.notifications.count) daily reminders")
             }
             .font(.system(.caption, design: .rounded))
             .foregroundColor(.secondary)
@@ -92,13 +95,23 @@ struct WorkoutEditorView: View {
     @State var plan: WorkoutPlan
 
     @State private var draftName: String = ""
+    @State private var draftExerciseDuration: String = ""
+    @State private var draftRestDuration: String = ""
     @State private var draftExercises: [Exercise] = []
 
+    @State private var numberOfRandomTimes: String = ""
+    @State private var notificationTimes: [DateComponents] = []
+    @State private var notificationText: NotificationTextData = .init(title: "", body: "")
+
+    @EnvironmentObject private var lnManager: LocalNotificationManager
     var body: some View {
         Form {
-            Section(header: Text("Workout Details")) {
-                TextField("Workout Name", text: $draftName).font(.headline)
-            }
+            AddNotificationView(
+                numberOfRandomTimes: $numberOfRandomTimes,
+                notificationTimes: $notificationTimes,
+                notificationText: $notificationText
+            )
+            WorkoutNameAndTimeInputs(workoutName: $draftName, exerciseDuration: $draftExerciseDuration, restDuration: $draftRestDuration)
 
             Section(header: Text("Exercises")) {
                 ForEach($draftExercises) { $exercise in
@@ -137,15 +150,38 @@ struct WorkoutEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             draftName = plan.name
+            draftExerciseDuration = String(plan.exercises.first?.duration ?? 0)
+            draftRestDuration = String(plan.exercises.first?.rest ?? 0)
             draftExercises = plan.exercises.map { $0.copy() }
+            notificationTimes = plan.notifications
+
+            (notificationText.title, notificationText.body) = (plan.notificationText.title, plan.notificationText.body)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
                     plan.name = draftName
                     plan.exercises = draftExercises
+                    plan.notifications = notificationTimes
+                    (plan.notificationText.title, plan.notificationText.body) = (notificationText.title, notificationText.body)
+
+                    Task {
+                        await lnManager.scheduleNotifications(for: plan)
+                    }
                     dismiss()
                 }
+            }
+        }
+        .onChange(of: draftExerciseDuration) { newValue in
+            let value = Int(newValue) ?? 0
+            for exercise in draftExercises {
+                exercise.duration = value
+            }
+        }
+        .onChange(of: draftRestDuration) { newValue in
+            let value = Int(newValue) ?? 0
+            for exercise in draftExercises {
+                exercise.rest = value
             }
         }
     }

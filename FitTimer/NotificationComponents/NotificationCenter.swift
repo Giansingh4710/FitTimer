@@ -3,34 +3,61 @@ import SwiftUI
 
 struct UpcomingNotificationsView: View {
     @EnvironmentObject private var lnManager: LocalNotificationManager
+    @State private var showRemoveAllNotificationsAlert = false
 
     var body: some View {
-        List {
-            Section {
-                if lnManager.isGranted == false {
-                    Button("Enable Notifications") {
-                        lnManager.openSettings()
-                    }
-                } else if lnManager.pendingRequests.isEmpty {
-                    EmptyStateView(
-                        title: "No Upcoming Notifications",
-                        systemImage: "bell.slash",
-                        description: "Add notifications to your activities to see them here"
-                    )
-                } else {
-                    ForEach(lnManager.pendingRequests, id: \.identifier) { request in
-                        NotificationBar(request: request)
-                    }
-                }
-            } header: {
-                Text("Notifications")
+        VStack(spacing: 0) {
+            HStack {
+                Label(
+                    title: { Text("Total \(lnManager.pendingRequests.count) Notifications") },
+                    icon: { Image(systemName: "bell.fill") }
+                )
+                .font(.headline)
+                .foregroundStyle(.primary)
+                
+                Spacer()
+                
+                Text(Date(), style: .date)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
+            .padding()
+            .background(Color(UIColor.systemBackground))
+            .shadow(color: .black.opacity(0.05), radius: 1, y: 1)
+            
+            List {
+                Section {
+                    if lnManager.isGranted == false {
+                        Button("Enable Notifications") {
+                            lnManager.openSettings()
+                        }
+                    } else if lnManager.pendingRequests.isEmpty {
+                        EmptyStateView(
+                            title: "No Upcoming Notifications",
+                            systemImage: "bell.slash",
+                            description: "Add notifications to your activities to see them here"
+                        )
+                    } else {
+                        ForEach(lnManager.pendingRequests, id: \.identifier) { request in
+                            NotificationBar(request: request)
+                        }
+                    }
+                } header: {
+                    Text("All Notifications")
+                }
+            }
+        }
+        .alert("Clear All Notifications?", isPresented: $showRemoveAllNotificationsAlert) {
+            Button("Clear All", role: .destructive) {
+                lnManager.clearRequests()
+            }
+            Button("Cancel", role: .cancel) {}
         }
         .toolbar {
             if !lnManager.pendingRequests.isEmpty {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        lnManager.clearRequests()
+                        showRemoveAllNotificationsAlert = true
                     } label: {
                         Image(systemName: "clear.fill")
                             .imageScale(.large)
@@ -72,16 +99,6 @@ struct NotificationBar: View {
                     .imageScale(.small)
             }
             .foregroundColor(.secondary)
-            if let trigger = request.trigger as? UNCalendarNotificationTrigger {
-                Label {
-                    Text(trigger.repeats ? "Repeating Daily" : "One-time")
-                        .font(.caption2)
-                } icon: {
-                    Image(systemName: trigger.repeats ? "repeat" : "1.circle")
-                        .imageScale(.small)
-                }
-                .foregroundColor(.secondary)
-            }
         }
         .padding(.vertical, 4)
         .swipeActions {

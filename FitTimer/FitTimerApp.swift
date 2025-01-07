@@ -14,6 +14,7 @@ struct FitTimerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // .environmentObject(lnManager)
         }
         .environmentObject(lnManager)
         .modelContainer(for: [
@@ -21,4 +22,8 @@ struct FitTimerApp: App {
             Activity.self,
         ])
     }
+
+    // init() {
+    //     UNUserNotificationCenter.current().delegate = lnManager
+    // }
 }

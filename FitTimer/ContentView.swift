@@ -24,22 +24,22 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             List {
-                ListOfWorkouts(
-                    isShowingAddWorkoutModal: $isShowingAddWorkoutModal
-                )
-                ListOfActivities(
-                    activityToShow: $activityToShow,
-                    showAddActivityModal: $showAddActivityModal
-                )
+                ListOfWorkouts(isShowingAddWorkoutModal: $isShowingAddWorkoutModal)
+                ListOfActivities(activityToShow: $activityToShow, showAddActivityModal: $showAddActivityModal)
                 Button(action: { showingNotificationCenter = true }) {
-                    Text("Notifications: \(lnManager.pendingRequests.count)")
+                    HStack {
+                        Image(systemName: "bell.badge")
+                        Text("Notifications: \(lnManager.pendingRequests.count)")
+                    }
                 }
             }
             .navigationTitle("Fit Timer")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingNotificationCenter = true }) {
-                        Image(systemName: "bell.badge")
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Image(systemName: "gearshape.fill")
                     }
                 }
             }

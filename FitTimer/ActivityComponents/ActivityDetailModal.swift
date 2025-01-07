@@ -14,7 +14,7 @@ struct ActivityDetailModal: View {
     @State private var lastCountedDate: Date = .init()
     @State private var createdAt: Date = .init()
 
-    @State private var showingNotificationPermissionAlert = false
+    @State private var notificationText: NotificationTextData = .init(title: "", body: "")
 
     @State private var numberOfRandomTimes: String = ""
     @State private var showingRandomTimesAlert = false
@@ -31,27 +31,57 @@ struct ActivityDetailModal: View {
 
                 // Counter Section
                 Section {
-                    HStack(spacing: 20) {
-                        Label("Decrease", systemImage: "minus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.accentColor)
-                            .frame(width: 60, height: 44)
-                            .onTapGesture {
-                                decrementCount()
-                            }
-
-                        Text("\(newCount)")
-                            .font(.system(size: 48, weight: .bold))
-                            .monospacedDigit()
-                            .frame(maxWidth: .infinity)
-
-                        Button(action: incrementCount) {
-                            Label("Increase", systemImage: "plus.circle.fill")
-                                .font(.title2)
+                    VStack(spacing: 12) {
+                        // Counter Controls
+                        HStack(spacing: 16) {
+                            Label("Decrease", systemImage: "minus.circle.fill")
+                                .font(.title)
                                 .foregroundColor(.accentColor)
+                                .onTapGesture { decrementCount() }
+                                .buttonStyle(.plain)
+
+                            TextField("Count", value: $newCount, format: .number)
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.center)
+                                .font(.system(size: 48, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .keyboardType(.numbersAndPunctuation)
+                                .minimumScaleFactor(0.5)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color(UIColor.secondarySystemBackground))
+                                )
+
+                            Label("Increase", systemImage: "plus.circle.fill")
+                                .font(.title)
+                                .foregroundColor(.accentColor)
+                                .onTapGesture { incrementCount() }
+                                .buttonStyle(.plain)
                         }
-                        .frame(width: 60, height: 44)
+                        .padding(.horizontal)
+
+                        // Quick Increment Buttons
+                        HStack(spacing: 12) {
+                            ForEach([5, 10, 25], id: \.self) { value in
+                                Text("+\(value)")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundColor(.accentColor)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.accentColor, lineWidth: 1)
+                                    ).onTapGesture {
+                                        newCount += value
+                                    }
+                            }
+                        }
+                        .padding(.horizontal)
                     }
+                    .listRowInsets(EdgeInsets())
+                    .padding(.vertical, 8)
                     .labelStyle(.iconOnly)
 
                     HStack {
@@ -96,18 +126,9 @@ struct ActivityDetailModal: View {
 
                 AddNotificationView(
                     numberOfRandomTimes: $numberOfRandomTimes,
-                    notificationTimes: $notificationTimes
+                    notificationTimes: $notificationTimes,
+                    notificationText: $notificationText
                 )
-
-                // Reset Button Section
-                Section {
-                    Button(role: .destructive) {
-                        newCount = 0
-                    } label: {
-                        Text("Reset Count")
-                            .frame(maxWidth: .infinity)
-                    }
-                }
             }
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle("Edit Activity")
@@ -127,22 +148,6 @@ struct ActivityDetailModal: View {
                 }
             }
         }
-        .alert(isPresented: $showingNotificationPermissionAlert) {
-            Alert(
-                title: Text("Turn On Notifications"),
-                message: Text("Can't send notifications without permission. If you click OK, you will basically have a counter and won't get any reminders"),
-                primaryButton: .default(
-                    Text("Ok"),
-                    action: {
-                        activity.notifications = []
-                    }
-                ),
-                secondaryButton: .cancel(
-                    Text("Cancel"),
-                    action: {}
-                )
-            )
-        }
         .onAppear {
             newName = activity.name
             newCount = activity.count
@@ -151,6 +156,7 @@ struct ActivityDetailModal: View {
             newResetDaily = activity.resetDaily
             lastCountedDate = activity.lastCounted
             createdAt = activity.createdAt
+            notificationText = activity.notificationText
         }
     }
 
@@ -165,15 +171,8 @@ struct ActivityDetailModal: View {
     }
 
     private func saveChanges() async {
-        if notificationTimes.count > 0 {
-            if lnManager.isGranted == false {
-                showingNotificationPermissionAlert = true
-                return
-            }
-        }
-
         activity.notifications = notificationTimes
-        await lnManager.scheduleNotificationsForActivity(activity: activity)
+        await lnManager.scheduleNotifications(for: activity)
         activity.name = newName
         activity.resetDaily = newResetDaily
         if newCount != activity.count {
@@ -181,6 +180,7 @@ struct ActivityDetailModal: View {
             activity.count = newCount
             activity.todayCount = todayCount
         }
+        activity.notificationText = notificationText
         dismiss()
     }
 

@@ -47,13 +47,10 @@ class LocalNotificationManager: NSObject, ObservableObject, UNUserNotificationCe
         }
     }
 
-    func scheduleCalendarNotification(identifier: String, title: String, body: String, subtitle: String? = nil, dateComponents: DateComponents, repeats: Bool) async {
+    func scheduleCalendarNotification(identifier: String, title: String, body: String, dateComponents: DateComponents, repeats: Bool) async {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
-        if let theSubtitle = subtitle {
-            content.subtitle = theSubtitle
-        }
         content.sound = .default
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: repeats)
@@ -63,8 +60,17 @@ class LocalNotificationManager: NSObject, ObservableObject, UNUserNotificationCe
     }
 
     func getPendingRequests() async {
-        pendingRequests = await notificationCenter.pendingNotificationRequests()
-        print("Pending: \(pendingRequests.count)")
+        let requests = await notificationCenter.pendingNotificationRequests()
+        pendingRequests = requests.sorted { request1, request2 in
+            guard let trigger1 = request1.trigger as? UNCalendarNotificationTrigger,
+                  let trigger2 = request2.trigger as? UNCalendarNotificationTrigger,
+                  let date1 = trigger1.nextTriggerDate(),
+                  let date2 = trigger2.nextTriggerDate()
+            else {
+                return false
+            }
+            return date1 < date2
+        }
     }
 
     func removeRequest(withIdentifier identifier: String) {
@@ -74,11 +80,11 @@ class LocalNotificationManager: NSObject, ObservableObject, UNUserNotificationCe
         }
     }
 
-    func removeNotificationsForActivity(activity: Activity) {
+    func removeNotifications(for activityOrWorkout: any CommonProps) {
         var newPendingRequests: [UNNotificationRequest] = []
         var uuidsToRemove: [String] = []
         for request in pendingRequests {
-            if request.identifier.hasPrefix(activity.id.uuidString) {
+            if request.identifier.hasPrefix(activityOrWorkout.id.uuidString) {
                 uuidsToRemove.append(request.identifier)
             } else {
                 newPendingRequests.append(request)
@@ -86,40 +92,43 @@ class LocalNotificationManager: NSObject, ObservableObject, UNUserNotificationCe
         }
         notificationCenter.removePendingNotificationRequests(withIdentifiers: uuidsToRemove)
 
-        print("before removal: \(pendingRequests.count), \(activity.id.uuidString)")
         pendingRequests = newPendingRequests
-        print("after removal: \(pendingRequests.count)")
     }
 
-    func scheduleNotificationsForActivity(activity: Activity) async {
-        removeNotificationsForActivity(activity: activity)
-
-        print("Before Schedule: \(pendingRequests.count)")
-        await getPendingRequests()
-        for components in activity.notifications {
+    func scheduleNotifications(for activityOrWorkout: any CommonProps) async {
+        removeNotifications(for: activityOrWorkout)
+        for components in activityOrWorkout.notifications {
             var dateComponents = DateComponents()
             dateComponents.hour = components.hour
             dateComponents.minute = components.minute
 
             await scheduleCalendarNotification(
-                identifier: makeNotificationIdString(activity, dateComponents),
-                title: "\(activity.name)",
-                body: "Track your progress by adding to your daily count.",
-                subtitle: "Time for \(activity.name)!",
+                identifier: makeNotificationIdString(activityOrWorkout, dateComponents),
+                title: activityOrWorkout.notificationText.title,
+                body: activityOrWorkout.notificationText.body,
+                // subtitle: nil,
                 dateComponents: dateComponents,
                 repeats: true
             )
         }
-        print("After Schedule: \(pendingRequests.count)")
     }
 
     func clearRequests() {
         notificationCenter.removeAllPendingNotificationRequests()
         pendingRequests.removeAll()
-        print("After Clear Pending: \(pendingRequests.count) == 0")
+    }
+
+    func makeNotificationIdString(_ activityOrWorkout: any CommonProps, _ components: DateComponents) -> String {
+        return "\(activityOrWorkout.id)_\(activityOrWorkout.name)_\(components.hour ?? 0)_\(components.minute ?? 0)"
     }
 }
 
-func makeNotificationIdString(_ activity: Activity, _ components: DateComponents) -> String {
-    return "\(activity.id)_\(activity.name)_\(components.hour ?? 0)_\(components.minute ?? 0)"
+protocol CommonProps {
+    var id: UUID { get }
+    var name: String { get }
+    var notifications: [DateComponents] { get }
+    var notificationText: NotificationTextData { get }
 }
+
+extension Activity: CommonProps {}
+extension WorkoutPlan: CommonProps {}

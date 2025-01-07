@@ -5,7 +5,8 @@ struct ListOfActivities: View {
     @Binding var activityToShow: Activity?
     @Binding var showAddActivityModal: Bool
 
-    @Query private var activities: [Activity]
+    // @Query(sort: \Activity.createdAt, order: .reverse) private var activities: [Activity]
+    @Query(sort: \Activity.createdAt) private var activities: [Activity]
     @State private var selectedActivity: Activity? = nil
     @Environment(\.modelContext) var modelContext
     @EnvironmentObject private var lnManager: LocalNotificationManager
@@ -18,7 +19,7 @@ struct ListOfActivities: View {
                     selectActivity: { activityToShow = activity },
                     deleteAction: {
                         Task {
-                            await lnManager.removeNotificationsForActivity(activity: activity)
+                            await lnManager.removeNotifications(for: activity)
                             modelContext.delete(activity)
                         }
                     }
@@ -32,7 +33,7 @@ struct ListOfActivities: View {
             }
         } header: {
             HStack {
-                Text("Activities")
+                Text(activities.count == 1 ? "1 Activity" : "\(activities.count) Activities")
                     .font(.title2)
                     .bold()
                 InfoButton(
@@ -52,7 +53,7 @@ struct ListOfActivities: View {
             for activity in activities {
                 activity.updateIfNewDay()
                 Task {
-                    await lnManager.scheduleNotificationsForActivity(activity: activity)
+                    await lnManager.scheduleNotifications(for: activity)
                 }
             }
         }
@@ -83,8 +84,8 @@ struct ActivityRow: View {
             }
             Spacer()
 
-            // button will run when whole row tapped. Not Warping here because has styling side effects
             Button(action: selectActivity) {
+                // button will run when whole row tapped. Not Warping here because has styling side effects
                 Text("Count: \(activity.count)").font(.subheadline)
             }
         }

@@ -4,24 +4,23 @@ struct AddWorkoutModal: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
 
-    @State private var workoutName: String = "Joe"
-    @State private var exerciseDuration: String = "5"
-    @State private var restDuration: String = "5"
-    @State private var exercises: [String] = ["Jump jacks"]
+    @State private var workoutName: String = ""
+    @State private var exerciseDuration: String = ""
+    @State private var restDuration: String = ""
+    @State private var exercises: [String] = []
     @State private var isBulkInput: Bool = false
     @State private var bulkExercises: String = ""
+
+    @State private var numberOfRandomTimes: String = ""
+    @State private var notificationTimes: [DateComponents] = []
+    @State var notificationText: NotificationTextData = .init(title: "", body: "")
+    @EnvironmentObject private var lnManager: LocalNotificationManager
+    @State private var showingNotificationPermissionAlert = false
 
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Workout Details")) {
-                    TextField("Workout Name", text: $workoutName)
-                    TextField("Exercise Duration (seconds)", text: $exerciseDuration)
-                        .keyboardType(.numberPad)
-                    TextField("Rest Duration (seconds)", text: $restDuration)
-                        .keyboardType(.numberPad)
-                }
-
+                WorkoutNameAndTimeInputs(workoutName: $workoutName, exerciseDuration: $exerciseDuration, restDuration: $restDuration)
                 Section(header: Text("Exercises")) {
                     Toggle("Bulk Input Mode", isOn: $isBulkInput)
 
@@ -60,6 +59,11 @@ struct AddWorkoutModal: View {
                         }
                     }
                 }
+                AddNotificationView(
+                    numberOfRandomTimes: $numberOfRandomTimes,
+                    notificationTimes: $notificationTimes,
+                    notificationText: $notificationText
+                )
             }
             .navigationTitle("New Workout")
             .toolbar {
@@ -70,26 +74,29 @@ struct AddWorkoutModal: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        let exercisesObj = exercises.map {
-                            Exercise(
-                                name: $0,
-                                duration: Int(exerciseDuration) ?? 0,
-                                rest: Int(restDuration) ?? 0
-                            )
+                        Task {
+                            await saveActivity()
                         }
-
-                        modelContext.insert(
-                            WorkoutPlan(
-                                name: workoutName,
-                                exercises: exercisesObj
-                            )
-                        )
-                        dismiss()
-                    }
-                    .disabled(workoutName.isEmpty || exerciseDuration.isEmpty || restDuration.isEmpty || exercises.isEmpty)
+                    }.disabled(workoutName.isEmpty || exerciseDuration.isEmpty || restDuration.isEmpty || exercises.isEmpty)
                 }
             }
         }
+    }
+
+    private func saveActivity() async {
+        let exercisesObj = exercises.map {
+            Exercise(
+                name: $0,
+                duration: Int(exerciseDuration) ?? 0,
+                rest: Int(restDuration) ?? 0
+            )
+        }
+
+        let newWorkout = WorkoutPlan(name: workoutName, exercises: exercisesObj, notifications: notificationTimes)
+        newWorkout.notificationText = notificationText
+        modelContext.insert(newWorkout)
+        await lnManager.scheduleNotifications(for: newWorkout)
+        dismiss()
     }
 
     private func deleteExercise(at offsets: IndexSet) {
@@ -104,5 +111,21 @@ struct AddWorkoutModal: View {
 
         exercises = newExercises
         bulkExercises = ""
+    }
+}
+
+struct WorkoutNameAndTimeInputs: View {
+    @Binding var workoutName: String
+    @Binding var exerciseDuration: String
+    @Binding var restDuration: String
+
+    var body: some View {
+        Section(header: Text("Workout Details")) {
+            TextField("Workout Name", text: $workoutName)
+            TextField("Exercise Duration (seconds)", text: $exerciseDuration)
+                .keyboardType(.numberPad)
+            TextField("Rest Duration (seconds)", text: $restDuration)
+                .keyboardType(.numberPad)
+        }
     }
 }

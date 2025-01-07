@@ -1,10 +1,11 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ListOfWorkouts: View {
     @Binding var isShowingAddWorkoutModal: Bool
-    @Query private var workoutPlans: [WorkoutPlan]
+    @Query(sort: \WorkoutPlan.createdAt) private var workoutPlans: [WorkoutPlan]
     @Environment(\.modelContext) var modelContext
+    @EnvironmentObject private var lnManager: LocalNotificationManager
 
     var body: some View {
         Section {
@@ -17,10 +18,9 @@ struct ListOfWorkouts: View {
                                 .fontWeight(.medium)
 
                             HStack(spacing: 8) {
-                                Text("\(plan.exercises.count) exercises")
-                                Text("•")
                                 Text(formatDuration(getTotalWorkoutTime(plan)))
                                 Text("•")
+                                Text("\(plan.notifications.count) reminders")
                             }
                             .font(.system(.caption, design: .rounded))
                             .foregroundColor(.secondary)
@@ -32,7 +32,6 @@ struct ListOfWorkouts: View {
                 .contextMenu {
                     Button("Delete", role: .destructive) {
                         deleteWorkout(plan)
-
                     }
                 }
                 .swipeActions(edge: .trailing) {
@@ -53,7 +52,7 @@ struct ListOfWorkouts: View {
             }
         } header: {
             HStack {
-                Text("Workout Plans")
+                Text(workoutPlans.count == 1 ? "1 Workout Plan" : "\(workoutPlans.count) Workout Plans")
                     .font(.title2)
                     .bold()
                 InfoButton(
@@ -69,9 +68,16 @@ struct ListOfWorkouts: View {
                 )
             }
         }
+        .onAppear {
+            for workout in workoutPlans {
+                Task {
+                    await lnManager.scheduleNotifications(for: workout)
+                }
+            }
+        }
     }
 
     private func deleteWorkout(_ plan: WorkoutPlan) {
-        modelContext.delete(plan) 
+        modelContext.delete(plan)
     }
 }

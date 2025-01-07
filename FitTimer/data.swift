@@ -2,6 +2,16 @@ import SwiftData
 import SwiftUI
 
 @Model
+class NotificationTextData {
+    var title: String
+    var body: String
+    init(title: String, body: String) {
+        self.title = title
+        self.body = body
+    }
+}
+
+@Model
 class Exercise {
     @Attribute(.unique) var id: UUID
     var name: String
@@ -25,6 +35,7 @@ class WorkoutPlan {
     @Attribute(.unique) var id: UUID
     var createdAt: Date
     var name: String
+    @Relationship(deleteRule: .cascade) var notificationText: NotificationTextData
     var notifications: [DateComponents]
     var completedHistory: [Date]
     @Relationship(deleteRule: .cascade) var exercises: [Exercise]
@@ -33,6 +44,7 @@ class WorkoutPlan {
         id = UUID()
         createdAt = Date()
         completedHistory = []
+        notificationText = NotificationTextData(title: name, body: "Reminder for \(name)")
         self.name = name
         self.notifications = notifications
         self.exercises = exercises
@@ -56,6 +68,7 @@ class Activity {
     var name: String
     var count: Int
     var notifications: [DateComponents]
+    @Relationship(deleteRule: .cascade) var notificationText: NotificationTextData
 
     var resetDaily: Bool
     var lastCounted: Date
@@ -72,6 +85,7 @@ class Activity {
         lastCounted = Date()
         todayCount = 0
         history = []
+        notificationText = NotificationTextData(title: name, body: "Reminder for \(name)")
     }
 
     func getNextNotification() -> Date? {
@@ -101,7 +115,7 @@ class Activity {
         // Check if the last reset was on a different day
         if !calendar.isDate(lastCounted, inSameDayAs: now) {
             if todayCount != 0 {
-                history.append(ActivityHistory(count: todayCount, date: now))
+                history.append(ActivityHistory(count: todayCount, date: lastCounted))
             }
 
             if resetDaily {

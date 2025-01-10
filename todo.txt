@@ -1,3 +1,9 @@
-Import export workouts/activities csv
 
-Click notification to take you to an activity or workout.
+FitTimer:
+- Swipe right to input count don't work sometimes
+- Click notification to take you to an activity or workout.
+- Streaks
+- Calender view 
+
+Done:
+- UUID replace csv. Importing fixed and works fin

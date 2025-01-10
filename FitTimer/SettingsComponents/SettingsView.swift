@@ -3,13 +3,12 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var workouts: [WorkoutPlan]
-    @Query private var activities: [Activity]
+    @Query private var the_workouts: [WorkoutPlan]
+    @Query private var the_activities: [Activity]
 
     @State private var showExport = false
     @State private var exportType: ImportExportType?
-    @State private var showImporter = false
+    @State private var showImport = false
     @State private var importType: ImportExportType?
 
     @State private var showError = false
@@ -23,7 +22,7 @@ struct SettingsView: View {
         List {
             Section("Workouts") {
                 Button("Import Workout Plans") {
-                    showImporter = true
+                    showImport = true
                     importType = .workouts
                 }
                 Button("Export Workout Plans") {
@@ -35,7 +34,7 @@ struct SettingsView: View {
             Section("Activities") {
                 Button("Import Activities") {
                     // showingActivityImporter = true
-                    showImporter = true
+                    showImport = true
                     importType = .activities
                 }
                 Button("Export Activities") {
@@ -44,6 +43,7 @@ struct SettingsView: View {
                 }
             }
         }
+
         .navigationTitle("Settings")
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
@@ -51,9 +51,14 @@ struct SettingsView: View {
             Text(errorMessage)
         }
         .sheet(item: $importObj) { obj in
-            ImportPreviewView(importObject: obj)
+            ImportPreviewView(importObject: Binding(
+                get: { obj },
+                set: { newValue in
+                    importObj = newValue
+                }
+            ))
         }
-        .fileImporter(isPresented: $showImporter, allowedContentTypes: [UTType.commaSeparatedText]) { result in
+        .fileImporter(isPresented: $showImport, allowedContentTypes: [UTType.commaSeparatedText]) { result in
             switch result {
             case let .success(file):
                 if importType == .workouts {
@@ -77,17 +82,9 @@ struct SettingsView: View {
         }
     }
 
-    func dateToUnix(_ date: Date) -> String {
-        return String(Int(date.timeIntervalSince1970))
-    }
-
-    func unixToDate(_ unix: String) -> Date {
-        return Date(timeIntervalSince1970: Double(unix) ?? 0)
-    }
-
-    func dateComponentsToString(_ components: DateComponents) -> String {
-        return "\(components.hour ?? 0)#\(components.minute ?? 0)"
-    }
+    func dateToUnix(_ date: Date) -> String { return String(Int(date.timeIntervalSince1970)) }
+    func unixToDate(_ unix: String) -> Date { return Date(timeIntervalSince1970: Double(unix) ?? 0) }
+    func dateComponentsToString(_ components: DateComponents) -> String { return "\(components.hour ?? 0)#\(components.minute ?? 0)" }
 
     func stringToDateComponents(_ str: String) -> DateComponents {
         let parts = str.split(separator: "#")
@@ -98,13 +95,14 @@ struct SettingsView: View {
     }
 
     private func exportWorkoutsCSV() -> String {
-        var csv = "Name,CreatedAt,Notifications,CompletedHistory,Exercises\n"
-        for workout in workouts {
-            let notificationsStr = workout.notifications.map { dateComponentsToString($0) }.joined(separator: ";")
-            let historyStr = workout.completedHistory.map { dateToUnix($0) }.joined(separator: ";")
-            let exercisesStr = workout.exercises.map { "\($0.name)#\($0.duration)#\($0.rest)" }.joined(separator: ";")
+        var csv = "id,createdAt,completedHistory,name,notifications,exercises,notificationText"
+        for workout in the_workouts {
+            let notifications = workout.notifications.map { dateComponentsToString($0) }.joined(separator: ";")
+            let completedHistory = workout.completedHistory.map { dateToUnix($0) }.sorted().map { String($0) }.joined(separator: ";")
+            let exercises = workout.exercises.map { "\($0.name)#\($0.duration)#\($0.rest)" }.joined(separator: ";")
+            let notificationText = workout.notificationText.title + ";" + workout.notificationText.body
 
-            csv += "\(workout.name),\(dateToUnix(workout.createdAt)),\(notificationsStr),\(historyStr),\(exercisesStr)\n"
+            csv += "\n\(workout.id.uuidString),\(dateToUnix(workout.createdAt)),\(completedHistory),\(workout.name),\(notifications),\(exercises),\(notificationText)"
         }
         return csv
     }
@@ -122,54 +120,47 @@ struct SettingsView: View {
                 return
             }
 
-            importObj = ImportObject(type: "Workouts", items: [])
+            importObj = ImportObject(type: "workouts", items: [])
             for (index, row) in rows.enumerated() {
                 let cols = row.components(separatedBy: ",")
                 if index == 0 {
-                    if cols[0] != "Name" || cols[1] != "CreatedAt" || cols[2] != "Notifications" || cols[3] != "CompletedHistory" || cols[4] != "Exercises" {
+                    if cols.count < 7 {
+                        showError = true
+                        errorMessage = "Invalid CSV. Expected at least 7 columns but got \(cols.count) cols in row \(index + 1).\n Got: \(row)"
+                        importObj = nil
+                        return
+                    }
+                    if cols[0] != "id" || cols[1] != "createdAt" || cols[2] != "completedHistory" || cols[3] != "name" || cols[4] != "notifications" || cols[5] != "exercises" || cols[6] != "notificationText" {
                         showError = true
                         errorMessage = "Wrong Header Row. Expected Name,CreatedAt,Notifications,CompletedHistory,Exercises"
                         importObj = nil
                         return
                     }
                     continue
-                } else if cols.count == 1 {
-                    continue // empty newline row
-                } else if cols.count < 5 {
+                } else if cols.count == 1 { continue // empty newline row
+                } else if cols.count < 6 {
                     showError = true
-                    errorMessage = "Invalid CSV. Expected at least 5 columns but got \(cols.count) cols in row \(index + 1)"
+                    errorMessage = "Invalid CSV. Expected at least 6 columns but got \(cols.count) cols in row \(index + 1)"
                     importObj = nil
                     return
                 }
-                let name = cols[0]
-                let exercises = cols[4].split(separator: ";").map { "\($0.split(separator: "#")[0])" }.joined(separator: ", ")
-                let details = """
-                Created: \(unixToDate(cols[1]).formatted())
-                Exercises: \(exercises)
-                Notifications: \(cols[2])
-                Completed History: \(cols[3])
-                """
-                importObj?.items.append(
-                    ImportItem(name: name, details: details, createItem: { context in
-                        let notifications = cols[2].split(separator: ";")
-                            .map { stringToDateComponents(String($0)) }
-                        let completedHistory = cols[3].split(separator: ";")
-                            .map { unixToDate(String($0)) }
-                        let exercises = cols[4].split(separator: ";").map { exerciseStr -> Exercise in
-                            let parts = exerciseStr.split(separator: "#")
-                            return Exercise(name: String(parts[0]),
-                                            duration: Int(parts[1]) ?? 0,
-                                            rest: Int(parts[2]) ?? 0)
-                        }
 
-                        let workout = WorkoutPlan(name: name,
-                                                  exercises: exercises,
-                                                  notifications: notifications)
-                        workout.createdAt = unixToDate(cols[1])
-                        workout.completedHistory = completedHistory
-                        context.insert(workout)
-                    })
+                let exercises = cols[5].split(separator: ";").map { exerciseStr -> Exercise in
+                    let parts = exerciseStr.split(separator: "#")
+                    return Exercise(name: String(parts[0]), duration: Int(parts[1]) ?? 0, rest: Int(parts[2]) ?? 0)
+                }
+                let notificationTextLst = cols[6] == "" ? ["", ""] : cols[6].split(separator: ";")
+
+                let workout = WorkoutPlan(
+                    id: UUID(uuidString: cols[0]) ?? UUID(),
+                    createdAt: unixToDate(cols[1]),
+                    completedHistory: cols[2] == "" ? [] : cols[2].split(separator: ";").map { unixToDate(String($0)) },
+                    name: cols[3],
+                    notifications: cols[4] == "" ? [] : cols[4].split(separator: ";").map { stringToDateComponents(String($0)) },
+                    exercises: exercises,
+                    notificationText: NotificationTextData(title: String(notificationTextLst[0]), body: String(notificationTextLst[1]))
                 )
+                importObj?.items.append(.workoutPlan(workout))
             }
 
         } catch {
@@ -179,12 +170,23 @@ struct SettingsView: View {
     }
 
     private func exportActivitiesCSV() -> String {
-        var csv = "Name,CreatedAt,Count,Notifications,ResetDaily,LastCounted,TodayCount,History\n"
-        for activity in activities {
+        var csv = "id,name,count,notifications,resetDaily,createdAt,history,notificationText"
+        for activity in the_activities {
+            if activity.todayCount != 0 {
+                activity.history.append(ActivityHistory(count: activity.todayCount, date: activity.lastCounted))
+            }
             let notificationsStr = activity.notifications.map { dateComponentsToString($0) }.joined(separator: ";")
-            let historyStr = activity.history.map { "\(dateToUnix($0.date))#\($0.count)" }.joined(separator: ";")
+            let sortedHistoryStr = activity.history
+                .map { (dateToUnix($0.date), $0.count) } // Map to tuple (UnixTime, count)
+                .sorted { $0.0 < $1.0 } // Sort by Unix time (first element of tuple)
+                .map { "\($0.0)#\($0.1)" } // Convert back to string format
+                .joined(separator: ";") // Join with semicolon
 
-            csv += "\(activity.name),\(dateToUnix(activity.createdAt)),\(activity.count),\(notificationsStr),\(activity.resetDaily),\(dateToUnix(activity.lastCounted)),\(activity.todayCount),\(historyStr)\n"
+            let notificationText = activity.notificationText.title + ";" + activity.notificationText.body
+            csv += "\n\(activity.id.uuidString),\(activity.name),\(activity.count),\(notificationsStr),\(activity.resetDaily),\(dateToUnix(activity.createdAt)),\(sortedHistoryStr),\(notificationText)"
+            if activity.todayCount != 0 {
+                activity.history.removeLast()
+            }
         }
         return csv
     }
@@ -203,13 +205,20 @@ struct SettingsView: View {
                 return
             }
 
-            importObj = ImportObject(type: "Activity", items: [])
+            importObj = ImportObject(type: "activities", items: [])
             for (index, row) in rows.enumerated() {
                 let cols = row.components(separatedBy: ",")
                 if index == 0 {
-                    if cols[0] != "Name" || cols[1] != "CreatedAt" || cols[2] != "Count" || cols[3] != "Notifications" || cols[4] != "ResetDaily" || cols[5] != "LastCounted" || cols[6] != "TodayCount" || cols[7] != "History" {
+                    if cols.count < 8 {
                         showError = true
-                        errorMessage = "Wrong Header Row. Expected Name,CreatedAt,Count,Notifications,ResetDaily,LastCounted,TodayCount,History"
+                        errorMessage = "Invalid CSV. Expected at least 8 columns but got \(cols.count) cols in row \(index + 1).\n Got: \(rows)"
+                        importObj = nil
+                        return
+                    }
+
+                    if cols[0] != "id" || cols[1] != "name" || cols[2] != "count" || cols[3] != "notifications" || cols[4] != "resetDaily" || cols[5] != "createdAt" || cols[6] != "history" || cols[7] != "notificationText" {
+                        showError = true
+                        errorMessage = "Wrong Header Row. Expected id,name,count,notifications,resetDaily,createdAt,history,notificationText"
                         importObj = nil
                         return
                     }
@@ -223,33 +232,26 @@ struct SettingsView: View {
                     return
                 }
 
-                let name = cols[0]
-                let details = """
-                Created: \(unixToDate(cols[1]).formatted())
-                Count: \(cols[2])
-                Reset Daily: \(cols[4])
-                Today's Count: \(cols[6])
-                """
+                let history: [ActivityHistory] = cols[6].isEmpty ? [] : cols[6].split(separator: ";").map { historyStr -> ActivityHistory in
+                    let parts = historyStr.split(separator: "#")
+                    return ActivityHistory(
+                        count: Int(parts[1]) ?? 0,
+                        date: unixToDate(String(parts[0]))
+                    )
+                }
+                let notificationTextLst = cols[7].isEmpty ? ["", ""] : cols[7].split(separator: ";")
 
-                importObj?.items.append(
-                    ImportItem(name: name, details: details, createItem: { context in
-                        let notifications = cols[3].split(separator: ";").map { stringToDateComponents(String($0)) }
-                        let history = cols[7].split(separator: ";").map { historyStr -> ActivityHistory in
-                            let parts = historyStr.split(separator: "#")
-                            return ActivityHistory(count: Int(parts[1]) ?? 0, date: unixToDate(String(parts[0])))
-                        }
-
-                        let activity = Activity(name: name,
-                                                count: Int(cols[2]) ?? 0,
-                                                notifications: notifications,
-                                                resetDaily: Bool(cols[4]) ?? true)
-                        activity.createdAt = unixToDate(cols[1])
-                        activity.lastCounted = unixToDate(cols[5])
-                        activity.todayCount = Int(cols[6]) ?? 0
-                        activity.history = history
-                        context.insert(activity)
-                    })
+                let activity = Activity(
+                    id: UUID(uuidString: cols[0]) ?? UUID(),
+                    name: cols[1] == "" ? "New Activity" : cols[1],
+                    count: Int(cols[2]) ?? 0,
+                    notifications: cols[3].isEmpty ? [] : cols[3].split(separator: ";").map { stringToDateComponents(String($0)) },
+                    resetDaily: Bool(cols[4]) ?? true,
+                    createdAt: unixToDate(cols[5]),
+                    history: history,
+                    notificationText: NotificationTextData(title: String(notificationTextLst[0]), body: String(notificationTextLst[1]))
                 )
+                importObj?.items.append(.activity(activity))
             }
         } catch {
             showError = true

@@ -13,7 +13,6 @@ struct ContentView: View {
     @EnvironmentObject private var lnManager: LocalNotificationManager
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var activityToShow: Activity? = nil
     @State private var showAddActivityModal = false
 
     @State private var isShowingAddWorkoutModal = false
@@ -25,7 +24,7 @@ struct ContentView: View {
         NavigationView {
             List {
                 ListOfWorkouts(isShowingAddWorkoutModal: $isShowingAddWorkoutModal)
-                ListOfActivities(activityToShow: $activityToShow, showAddActivityModal: $showAddActivityModal)
+                ListOfActivities(showAddActivityModal: $showAddActivityModal)
                 Button(action: { showingNotificationCenter = true }) {
                     HStack {
                         Image(systemName: "bell.badge")
@@ -66,9 +65,6 @@ struct ContentView: View {
         // activity modals
         .sheet(isPresented: $showAddActivityModal) {
             AddActivityModal()
-        }
-        .sheet(item: $activityToShow) { activity in
-            ActivityDetailModal(activity: activity)
         }
 
         // workout modals

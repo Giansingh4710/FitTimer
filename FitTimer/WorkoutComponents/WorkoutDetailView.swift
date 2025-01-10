@@ -154,8 +154,9 @@ struct WorkoutEditorView: View {
             draftRestDuration = String(plan.exercises.first?.rest ?? 0)
             draftExercises = plan.exercises.map { $0.copy() }
             notificationTimes = plan.notifications
-
-            (notificationText.title, notificationText.body) = (plan.notificationText.title, plan.notificationText.body)
+            notificationText.title = plan.notificationText.title
+            notificationText.body = plan.notificationText.body
+            print(notificationText.body)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

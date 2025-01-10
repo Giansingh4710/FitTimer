@@ -2,7 +2,6 @@ import SwiftData
 import SwiftUI
 
 struct ListOfActivities: View {
-    @Binding var activityToShow: Activity?
     @Binding var showAddActivityModal: Bool
 
     // @Query(sort: \Activity.createdAt, order: .reverse) private var activities: [Activity]
@@ -16,7 +15,6 @@ struct ListOfActivities: View {
             ForEach(activities) { activity in
                 ActivityRow(
                     activity: activity,
-                    selectActivity: { activityToShow = activity },
                     deleteAction: {
                         Task {
                             await lnManager.removeNotifications(for: activity)
@@ -60,46 +58,122 @@ struct ListOfActivities: View {
     }
 }
 
+// struct ActivityRow: View {
+//     let activity: Activity // before was @State let activity and that was potential issue for incrementCount not working at random times
+//     let deleteAction: () -> Void
+//
+//     @State private var showInputAlert = false
+//     @State private var addToCount = ""
+//
+//     var body: some View {
+//         NavigationLink(destination: ActivityDetailView(activity: activity)) {
+//             HStack {
+//                 VStack(alignment: .leading) {
+//                     Text(activity.name).font(.headline)
+//                     Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
+//                     Text("\(activity.history.count) history").font(.caption).foregroundColor(.secondary)
+//                 }
+//                 Spacer()
+//                 if let nextTime = activity.formatNextNotification() {
+//                     VStack(alignment: .leading) {
+//                         Text("Next Reminder:").font(.caption)
+//                         Text("\(nextTime)").font(.caption).foregroundColor(.secondary)
+//                     }
+//                 }
+//                 Spacer()
+//
+//                 Text("Count: \(activity.count)").font(.subheadline)
+//             }
+//         }
+//         .alert("How many \(activity.name)s did you do?", isPresented: $showInputAlert) {
+//             TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
+//             Button("OK", action: incrementCount)
+//             Button("Cancel", role: .cancel, action: { addToCount = "" })
+//         }
+//         .swipeActions(edge: .leading) {
+//             Button {
+//                 showInputAlert = true
+//             } label: {
+//                 Label("Increase", systemImage: "plus.circle.fill")
+//             }
+//         }
+//         .swipeActions(edge: .trailing) {
+//             Button(role: .destructive) {
+//                 deleteAction()
+//             } label: {
+//                 Label("Delete", systemImage: "trash")
+//             }
+//         }
+//     }
+//
+//     private func incrementCount() {
+//         guard let increment = Int(addToCount), increment > 0 else {
+//             addToCount = ""
+//             return
+//         }
+//
+//         if activity.isNewDay() {
+//             activity.updateIfNewDay()
+//         }
+//
+//         activity.count += increment
+//         activity.todayCount += increment
+//         activity.lastCounted = Date()
+//         addToCount = ""
+//     }
+// }
+
 struct ActivityRow: View {
-    @State var activity: Activity
-    let selectActivity: () -> Void
+    let activity: Activity
     let deleteAction: () -> Void
 
     @State private var showInputAlert = false
     @State private var addToCount = ""
-
     var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(activity.name).font(.headline)
-                Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
-                // Text("Reset Count: \(activity.resetDaily ? "Daily" : "Never")").font(.caption).foregroundColor(.secondary)
-            }
-            Spacer()
-            if let nextTime = activity.formatNextNotification() {
+        NavigationLink(destination: ActivityDetailView(activity: activity)) {
+            HStack {
                 VStack(alignment: .leading) {
-                    Text("Next Reminder:").font(.caption)
-                    Text("\(nextTime)").font(.caption).foregroundColor(.secondary)
+                    Text(activity.name).font(.headline)
+                    Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
+                    Text("\(activity.history.count) history").font(.caption).foregroundColor(.secondary)
                 }
-            }
-            Spacer()
-
-            Button(action: selectActivity) {
-                // button will run when whole row tapped. Not Warping here because has styling side effects
+                Spacer()
+                if let nextTime = activity.formatNextNotification() {
+                    VStack(alignment: .leading) {
+                        Text("Next Reminder:").font(.caption)
+                        Text("\(nextTime)").font(.caption).foregroundColor(.secondary)
+                    }
+                }
+                Spacer()
                 Text("Count: \(activity.count)").font(.subheadline)
             }
         }
         .alert("How many \(activity.name)s did you do?", isPresented: $showInputAlert) {
-            TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
-            Button("OK", action: incrementCount)
-            Button("Cancel", role: .cancel, action: { addToCount = "" })
+            TextField("Enter number", text: $addToCount).keyboardType(.numbersAndPunctuation)
+            Button("Add") {
+                print("\(activity.name) - Add button tapped")
+                incrementCount()
+                showInputAlert = false
+            }
+            Button("Cancel", role: .cancel) {
+                addToCount = ""
+                showInputAlert = false
+            }
+        }
+        .onChange(of: showInputAlert) { _, newValue in
+            if !newValue {
+                // Clear the input when alert is dismissed
+                addToCount = ""
+            }
         }
         .swipeActions(edge: .leading) {
             Button {
+                addToCount = ""
                 showInputAlert = true
             } label: {
                 Label("Increase", systemImage: "plus.circle.fill")
             }
+            .tint(.blue)
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
@@ -111,9 +185,22 @@ struct ActivityRow: View {
     }
 
     private func incrementCount() {
-        activity.count += Int(addToCount) ?? 0
-        activity.todayCount += Int(addToCount) ?? 0
+        print("Incrementing count for \(activity.name)")
+        guard let increment = Int(addToCount) else {
+            print("Invalid input: \(addToCount)")
+            return
+        }
+
+        print("Adding \(increment) to \(activity.name) from input \(addToCount)")
+
+        if activity.isNewDay() {
+            activity.updateIfNewDay()
+        }
+
+        activity.count += increment
+        activity.todayCount += increment
         activity.lastCounted = Date()
+
         addToCount = ""
     }
 }

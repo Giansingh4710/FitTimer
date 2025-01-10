@@ -18,8 +18,8 @@ class Exercise {
     var duration: Int // in seconds
     var rest: Int // in seconds
 
-    init(name: String, duration: Int, rest: Int) {
-        id = UUID()
+    init(id: UUID = UUID(), name: String, duration: Int, rest: Int) {
+        self.id = id
         self.name = name
         self.duration = duration
         self.rest = rest
@@ -40,14 +40,26 @@ class WorkoutPlan {
     var completedHistory: [Date]
     @Relationship(deleteRule: .cascade) var exercises: [Exercise]
 
-    init(name: String, exercises: [Exercise] = [], notifications: [DateComponents] = []) {
-        id = UUID()
-        createdAt = Date()
-        completedHistory = []
-        notificationText = NotificationTextData(title: name, body: "Reminder for \(name)")
+    init(id: UUID = UUID(), createdAt: Date = Date(), completedHistory: [Date] = [], name: String, notifications: [DateComponents] = [], exercises: [Exercise] = [], notificationText: NotificationTextData = NotificationTextData(title: "", body: "")) {
+        self.id = id
+        self.createdAt = createdAt
+        self.completedHistory = completedHistory
         self.name = name
         self.notifications = notifications
         self.exercises = exercises
+        self.notificationText = notificationText
+        if self.notificationText.title == "" {
+            self.notificationText.title = name
+            self.notificationText.body = "Reminder for \(name)"
+        }
+    }
+
+    func print_workout() {
+        print("name: \(name)")
+        print("createdAt: \(createdAt)")
+        print("completedHistory: \(completedHistory)")
+        print("notifications: \(notifications)")
+        print("exercises: \(exercises)")
     }
 }
 
@@ -75,17 +87,21 @@ class Activity {
     var todayCount: Int
     @Relationship(deleteRule: .cascade) var history: [ActivityHistory]
 
-    init(id: UUID = UUID(), name: String, count: Int = 0, notifications: [DateComponents] = [], resetDaily: Bool = true) {
+    init(id: UUID = UUID(), name: String, count: Int = 0, notifications: [DateComponents] = [], resetDaily: Bool = true, createdAt: Date = Date(), lastCounted: Date = Date(), todayCount: Int = 0, history: [ActivityHistory] = [], notificationText: NotificationTextData = NotificationTextData(title: "", body: "")) {
         self.id = id
         self.name = name
         self.count = count
         self.notifications = notifications
         self.resetDaily = resetDaily
-        createdAt = Date()
-        lastCounted = Date()
-        todayCount = 0
-        history = []
-        notificationText = NotificationTextData(title: name, body: "Reminder for \(name)")
+        self.createdAt = createdAt
+        self.lastCounted = lastCounted
+        self.todayCount = todayCount
+        self.history = history
+        self.notificationText = notificationText
+        if self.notificationText.title == "" {
+            self.notificationText.title = name
+            self.notificationText.body = "Reminder for \(name)"
+        }
     }
 
     func getNextNotification() -> Date? {
@@ -109,11 +125,7 @@ class Activity {
     }
 
     func updateIfNewDay() {
-        let calendar = Calendar.current
-        let now = Date()
-
-        // Check if the last reset was on a different day
-        if !calendar.isDate(lastCounted, inSameDayAs: now) {
+        if isNewDay() {
             if todayCount != 0 {
                 history.append(ActivityHistory(count: todayCount, date: lastCounted))
             }
@@ -121,8 +133,27 @@ class Activity {
             if resetDaily {
                 count = 0
             }
-            lastCounted = now
+            lastCounted = Date()
             todayCount = 0
+        }
+    }
+
+    func isNewDay() -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        return !calendar.isDate(lastCounted, inSameDayAs: now) // Check if the last reset was on a different day
+    }
+
+    func print_activity() {
+        print("name: \(name)")
+        print("createdAt: \(createdAt)")
+        print("count: \(count)")
+        print("notifications: \(notifications)")
+        print("resetDaily: \(resetDaily)")
+        print("lastCounted: \(lastCounted)")
+        print("todayCount: \(todayCount)")
+        for historyItem in history {
+            print("Date: \(historyItem.date), Count: \(historyItem.count)")
         }
     }
 }

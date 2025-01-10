@@ -92,8 +92,7 @@ struct AddWorkoutModal: View {
             )
         }
 
-        let newWorkout = WorkoutPlan(name: workoutName, exercises: exercisesObj, notifications: notificationTimes)
-        newWorkout.notificationText = notificationText
+        let newWorkout = WorkoutPlan(name: workoutName, notifications: notificationTimes, exercises: exercisesObj, notificationText: notificationText)
         modelContext.insert(newWorkout)
         await lnManager.scheduleNotifications(for: newWorkout)
         dismiss()

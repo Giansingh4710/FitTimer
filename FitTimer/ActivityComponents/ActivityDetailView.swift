@@ -1,7 +1,7 @@
 import SwiftUI
 import UserNotifications
 
-struct ActivityDetailModal: View {
+struct ActivityDetailView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject private var lnManager: LocalNotificationManager
     @State var activity: Activity
@@ -57,7 +57,7 @@ struct ActivityDetailModal: View {
                             Label("Increase", systemImage: "plus.circle.fill")
                                 .font(.title)
                                 .foregroundColor(.accentColor)
-                                .onTapGesture { incrementCount() }
+                                .onTapGesture { incrementCount(1) }
                                 .buttonStyle(.plain)
                         }
                         .padding(.horizontal)
@@ -73,8 +73,9 @@ struct ActivityDetailModal: View {
                                     .background(
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(Color.accentColor, lineWidth: 1)
-                                    ).onTapGesture {
-                                        newCount += value
+                                    )
+                                    .onTapGesture {
+                                        incrementCount(value)
                                     }
                             }
                         }
@@ -110,7 +111,7 @@ struct ActivityDetailModal: View {
                 // Activity History Section
                 Section {
                     if activity.history.count > 0 {
-                        DisclosureGroup("Activity History") {
+                        DisclosureGroup("Activity History: \(activity.history.count)") {
                             ForEach(activity.history, id: \.date) { entry in
                                 HStack {
                                     Text(entry.date, style: .date)
@@ -134,11 +135,11 @@ struct ActivityDetailModal: View {
             .navigationTitle("Edit Activity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
+                // ToolbarItem(placement: .cancellationAction) {
+                //     Button("Cancel") {
+                //         dismiss()
+                //     }
+                // }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
@@ -160,9 +161,9 @@ struct ActivityDetailModal: View {
         }
     }
 
-    private func incrementCount() {
-        newCount += 1
-        todayCount += 1
+    private func incrementCount(_ value: Int = 1) {
+        newCount += value
+        todayCount += value
     }
 
     private func decrementCount() {
@@ -176,6 +177,7 @@ struct ActivityDetailModal: View {
         activity.name = newName
         activity.resetDaily = newResetDaily
         if newCount != activity.count {
+            if activity.isNewDay() { activity.updateIfNewDay() }
             activity.lastCounted = Date()
             activity.count = newCount
             activity.todayCount = todayCount

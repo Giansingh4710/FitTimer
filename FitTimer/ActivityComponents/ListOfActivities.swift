@@ -4,6 +4,11 @@ import SwiftUI
 struct ListOfActivities: View {
     @Binding var showAddActivityModal: Bool
 
+    @State private var showInputAlert = false
+    @State private var addToCount = ""
+
+    @State private var swipedRightOnActivity: Activity?
+
     // @Query(sort: \Activity.createdAt, order: .reverse) private var activities: [Activity]
     @Query(sort: \Activity.createdAt) private var activities: [Activity]
     @State private var selectedActivity: Activity? = nil
@@ -15,6 +20,10 @@ struct ListOfActivities: View {
             ForEach(activities) { activity in
                 ActivityRow(
                     activity: activity,
+                    swipedRight: { activity in
+                        swipedRightOnActivity = activity
+                        showInputAlert = true
+                    },
                     deleteAction: {
                         Task {
                             await lnManager.removeNotifications(for: activity)
@@ -55,6 +64,40 @@ struct ListOfActivities: View {
                 }
             }
         }
+
+        .alert("How many did you do?", isPresented: $showInputAlert) {
+            if let activity = swipedRightOnActivity {
+                TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
+                Button("Add") {
+                    print("before increment function for \(activity.name)") // Debug
+                    incrementCount(for: activity)
+                }
+                Button("Cancel", role: .cancel, action: { addToCount = "" })
+            } else {
+                Text("Something went wrong. Activity not found").foregroundColor(.red)
+                Button("Cancel", role: .cancel, action: { addToCount = "" })
+            }
+        }
+    }
+
+    func incrementCount(for activity: Activity) {
+        print("Incrementing count for \(activity.name)")
+        guard let increment = Int(addToCount) else {
+            print("Invalid input: \(addToCount)")
+            return
+        }
+
+        print("Adding \(increment) to \(activity.name) from input \(addToCount)")
+
+        if activity.isNewDay() {
+            activity.updateIfNewDay()
+        }
+
+        activity.count += increment
+        activity.todayCount += increment
+        activity.lastCounted = Date()
+
+        addToCount = ""
     }
 }
 
@@ -125,10 +168,9 @@ struct ListOfActivities: View {
 
 struct ActivityRow: View {
     let activity: Activity
+    let swipedRight: (Activity) -> Void
     let deleteAction: () -> Void
 
-    @State private var showInputAlert = false
-    @State private var addToCount = ""
     var body: some View {
         NavigationLink(destination: ActivityDetailView(activity: activity)) {
             HStack {
@@ -148,28 +190,9 @@ struct ActivityRow: View {
                 Text("Count: \(activity.count)").font(.subheadline)
             }
         }
-        .alert("How many \(activity.name)s did you do?", isPresented: $showInputAlert) {
-            TextField("Enter number", text: $addToCount).keyboardType(.numbersAndPunctuation)
-            Button("Add") {
-                print("\(activity.name) - Add button tapped")
-                incrementCount()
-                showInputAlert = false
-            }
-            Button("Cancel", role: .cancel) {
-                addToCount = ""
-                showInputAlert = false
-            }
-        }
-        .onChange(of: showInputAlert) { _, newValue in
-            if !newValue {
-                // Clear the input when alert is dismissed
-                addToCount = ""
-            }
-        }
         .swipeActions(edge: .leading) {
             Button {
-                addToCount = ""
-                showInputAlert = true
+                swipedRight(activity)
             } label: {
                 Label("Increase", systemImage: "plus.circle.fill")
             }
@@ -182,25 +205,5 @@ struct ActivityRow: View {
                 Label("Delete", systemImage: "trash")
             }
         }
-    }
-
-    private func incrementCount() {
-        print("Incrementing count for \(activity.name)")
-        guard let increment = Int(addToCount) else {
-            print("Invalid input: \(addToCount)")
-            return
-        }
-
-        print("Adding \(increment) to \(activity.name) from input \(addToCount)")
-
-        if activity.isNewDay() {
-            activity.updateIfNewDay()
-        }
-
-        activity.count += increment
-        activity.todayCount += increment
-        activity.lastCounted = Date()
-
-        addToCount = ""
     }
 }

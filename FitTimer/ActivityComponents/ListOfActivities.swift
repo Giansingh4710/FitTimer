@@ -65,7 +65,7 @@ struct ListOfActivities: View {
             }
         }
 
-        .alert("How many did you do?", isPresented: $showInputAlert) {
+        .alert("How many did you do? (doesn't work sometimes)", isPresented: $showInputAlert) {
             if let activity = swipedRightOnActivity {
                 TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
                 Button("Add") {
@@ -80,91 +80,26 @@ struct ListOfActivities: View {
         }
     }
 
-    func incrementCount(for activity: Activity) {
+    private func incrementCount(for activity: Activity) {
         print("Incrementing count for \(activity.name)")
-        guard let increment = Int(addToCount) else {
+        guard let incrementBy = Int(addToCount) else {
             print("Invalid input: \(addToCount)")
             return
         }
 
-        print("Adding \(increment) to \(activity.name) from input \(addToCount)")
+        print("Adding \(incrementBy) to \(activity.name) from input \(addToCount)")
 
         if activity.isNewDay() {
             activity.updateIfNewDay()
         }
 
-        activity.count += increment
-        activity.todayCount += increment
+        activity.count += incrementBy
+        activity.todayCount += incrementBy
         activity.lastCounted = Date()
 
         addToCount = ""
     }
 }
-
-// struct ActivityRow: View {
-//     let activity: Activity // before was @State let activity and that was potential issue for incrementCount not working at random times
-//     let deleteAction: () -> Void
-//
-//     @State private var showInputAlert = false
-//     @State private var addToCount = ""
-//
-//     var body: some View {
-//         NavigationLink(destination: ActivityDetailView(activity: activity)) {
-//             HStack {
-//                 VStack(alignment: .leading) {
-//                     Text(activity.name).font(.headline)
-//                     Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
-//                     Text("\(activity.history.count) history").font(.caption).foregroundColor(.secondary)
-//                 }
-//                 Spacer()
-//                 if let nextTime = activity.formatNextNotification() {
-//                     VStack(alignment: .leading) {
-//                         Text("Next Reminder:").font(.caption)
-//                         Text("\(nextTime)").font(.caption).foregroundColor(.secondary)
-//                     }
-//                 }
-//                 Spacer()
-//
-//                 Text("Count: \(activity.count)").font(.subheadline)
-//             }
-//         }
-//         .alert("How many \(activity.name)s did you do?", isPresented: $showInputAlert) {
-//             TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
-//             Button("OK", action: incrementCount)
-//             Button("Cancel", role: .cancel, action: { addToCount = "" })
-//         }
-//         .swipeActions(edge: .leading) {
-//             Button {
-//                 showInputAlert = true
-//             } label: {
-//                 Label("Increase", systemImage: "plus.circle.fill")
-//             }
-//         }
-//         .swipeActions(edge: .trailing) {
-//             Button(role: .destructive) {
-//                 deleteAction()
-//             } label: {
-//                 Label("Delete", systemImage: "trash")
-//             }
-//         }
-//     }
-//
-//     private func incrementCount() {
-//         guard let increment = Int(addToCount), increment > 0 else {
-//             addToCount = ""
-//             return
-//         }
-//
-//         if activity.isNewDay() {
-//             activity.updateIfNewDay()
-//         }
-//
-//         activity.count += increment
-//         activity.todayCount += increment
-//         activity.lastCounted = Date()
-//         addToCount = ""
-//     }
-// }
 
 struct ActivityRow: View {
     let activity: Activity
@@ -177,7 +112,7 @@ struct ActivityRow: View {
                 VStack(alignment: .leading) {
                     Text(activity.name).font(.headline)
                     Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
-                    Text("\(activity.history.count) history").font(.caption).foregroundColor(.secondary)
+                    Text("\(activity.todayCount) today").font(.caption).foregroundColor(.secondary)
                 }
                 Spacer()
                 if let nextTime = activity.formatNextNotification() {

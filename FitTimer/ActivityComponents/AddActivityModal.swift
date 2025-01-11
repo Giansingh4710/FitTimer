@@ -9,7 +9,6 @@ struct AddActivityModal: View {
     @State private var activityName: String = ""
     @FocusState private var isNumberInputFocused: Bool
 
-    @State var numberOfRandomTimes: String = ""
     @State var notificationTimes: [DateComponents] = []
     @State var notificationText: NotificationTextData = .init(title: "", body: "")
 
@@ -27,7 +26,6 @@ struct AddActivityModal: View {
                 }
 
                 AddNotificationView(
-                    numberOfRandomTimes: $numberOfRandomTimes,
                     notificationTimes: $notificationTimes,
                     notificationText: $notificationText
                 )

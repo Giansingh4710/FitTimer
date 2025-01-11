@@ -11,7 +11,6 @@ struct AddWorkoutModal: View {
     @State private var isBulkInput: Bool = false
     @State private var bulkExercises: String = ""
 
-    @State private var numberOfRandomTimes: String = ""
     @State private var notificationTimes: [DateComponents] = []
     @State var notificationText: NotificationTextData = .init(title: "", body: "")
     @EnvironmentObject private var lnManager: LocalNotificationManager
@@ -60,7 +59,6 @@ struct AddWorkoutModal: View {
                     }
                 }
                 AddNotificationView(
-                    numberOfRandomTimes: $numberOfRandomTimes,
                     notificationTimes: $notificationTimes,
                     notificationText: $notificationText
                 )

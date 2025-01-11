@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct AddNotificationView: View {
-    @Binding var numberOfRandomTimes: String
     @Binding var notificationTimes: [DateComponents]
     @Binding var notificationText: NotificationTextData
 
     @FocusState private var isNumberInputFocused: Bool
     @State private var showAlert: Bool = false
+    @State private var numberOfRandomTimes: String = ""
 
     @EnvironmentObject private var lnManager: LocalNotificationManager
 

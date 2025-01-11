@@ -99,7 +99,6 @@ struct WorkoutEditorView: View {
     @State private var draftRestDuration: String = ""
     @State private var draftExercises: [Exercise] = []
 
-    @State private var numberOfRandomTimes: String = ""
     @State private var notificationTimes: [DateComponents] = []
     @State private var notificationText: NotificationTextData = .init(title: "", body: "")
 
@@ -107,7 +106,6 @@ struct WorkoutEditorView: View {
     var body: some View {
         Form {
             AddNotificationView(
-                numberOfRandomTimes: $numberOfRandomTimes,
                 notificationTimes: $notificationTimes,
                 notificationText: $notificationText
             )

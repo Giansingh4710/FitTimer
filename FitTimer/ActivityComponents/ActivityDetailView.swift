@@ -8,7 +8,6 @@ struct ActivityDetailView: View {
 
     @State private var newName: String = ""
     @State private var newCount: Int = 0
-    @State private var todayCount: Int = 0
     @State private var notificationTimes: [DateComponents] = []
     @State private var newResetDaily: Bool = true
     @State private var lastCountedDate: Date = .init()
@@ -16,8 +15,8 @@ struct ActivityDetailView: View {
 
     @State private var notificationText: NotificationTextData = .init(title: "", body: "")
 
-    @State private var numberOfRandomTimes: String = ""
-    @State private var showingRandomTimesAlert = false
+    @State private var showInputAlert = false
+    @State private var addToCount = ""
 
     var body: some View {
         NavigationView {
@@ -65,19 +64,9 @@ struct ActivityDetailView: View {
                         // Quick Increment Buttons
                         HStack(spacing: 12) {
                             ForEach([5, 10, 25], id: \.self) { value in
-                                Text("+\(value)")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundColor(.accentColor)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.accentColor, lineWidth: 1)
-                                    )
-                                    .onTapGesture {
-                                        incrementCount(value)
-                                    }
+                                SmallPlusText(text: "+\(value)", action: { incrementCount(value) })
                             }
+                            SmallPlusText(text: "+", action: { showInputAlert = true })
                         }
                         .padding(.horizontal)
                     }
@@ -126,7 +115,6 @@ struct ActivityDetailView: View {
                 }
 
                 AddNotificationView(
-                    numberOfRandomTimes: $numberOfRandomTimes,
                     notificationTimes: $notificationTimes,
                     notificationText: $notificationText
                 )
@@ -152,23 +140,34 @@ struct ActivityDetailView: View {
         .onAppear {
             newName = activity.name
             newCount = activity.count
-            todayCount = activity.todayCount
             notificationTimes = activity.notifications
             newResetDaily = activity.resetDaily
             lastCountedDate = activity.lastCounted
             createdAt = activity.createdAt
             notificationText = activity.notificationText
         }
+        .alert("How many '\(activity.name)'s did you do?", isPresented: $showInputAlert) {
+            TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
+            Button("Add") {
+                print("before incrementBy function for \(activity.name)") // Debug
+                guard let incrementBy = Int(addToCount) else {
+                    print("Invalid input: \(addToCount)")
+                    addToCount = ""
+                    return
+                }
+                incrementCount(incrementBy)
+                addToCount = ""
+            }
+            Button("Cancel", role: .cancel, action: { addToCount = "" })
+        }
     }
 
     private func incrementCount(_ value: Int = 1) {
         newCount += value
-        todayCount += value
     }
 
     private func decrementCount() {
         newCount -= 1
-        todayCount -= 1
     }
 
     private func saveChanges() async {
@@ -179,8 +178,8 @@ struct ActivityDetailView: View {
         if newCount != activity.count {
             if activity.isNewDay() { activity.updateIfNewDay() }
             activity.lastCounted = Date()
+            activity.todayCount += (newCount - activity.count)
             activity.count = newCount
-            activity.todayCount = todayCount
         }
         activity.notificationText = notificationText
         dismiss()
@@ -191,5 +190,25 @@ struct ActivityDetailView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+}
+
+struct SmallPlusText: View {
+    let text: String
+    let action: () -> Void
+
+    var body: some View {
+        Text(text)
+            .font(.subheadline.weight(.medium))
+            .foregroundColor(.accentColor)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.accentColor, lineWidth: 1)
+            )
+            .onTapGesture {
+                action()
+            }
     }
 }

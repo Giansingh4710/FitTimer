@@ -4,6 +4,9 @@ import SwiftUI
 struct ListOfActivities: View {
     @Binding var showAddActivityModal: Bool
 
+    @State private var activityToDelete: Activity?
+    @State private var showDeleteAlert = false
+
     @State private var showInputAlert = false
     @State private var addToCount = ""
 
@@ -25,10 +28,8 @@ struct ListOfActivities: View {
                         showInputAlert = true
                     },
                     deleteAction: {
-                        Task {
-                            await lnManager.removeNotifications(for: activity)
-                            modelContext.delete(activity)
-                        }
+                        activityToDelete = activity
+                        showDeleteAlert = true
                     }
                 )
             }
@@ -64,7 +65,20 @@ struct ListOfActivities: View {
                 }
             }
         }
-
+        .alert("Are you sure you want to delete this activity?", isPresented: $showDeleteAlert) {
+            Button("Delete", role: .destructive, action: {
+                if let activity = activityToDelete {
+                    Task {
+                        await lnManager.removeNotifications(for: activity)
+                        modelContext.delete(activity)
+                    }
+                }
+            })
+            Button("Cancel", role: .cancel, action: {
+                activityToDelete = nil
+                showDeleteAlert = false
+            })
+        }
         .alert("How many did you do? (doesn't work sometimes)", isPresented: $showInputAlert) {
             if let activity = swipedRightOnActivity {
                 TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
@@ -107,22 +121,42 @@ struct ActivityRow: View {
     let deleteAction: () -> Void
 
     var body: some View {
-        NavigationLink(destination: ActivityDetailView(activity: activity)) {
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(activity.name).font(.headline)
-                    Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
-                    Text("\(activity.todayCount) today").font(.caption).foregroundColor(.secondary)
-                }
-                Spacer()
-                if let nextTime = activity.formatNextNotification() {
+        ZStack(alignment: .center) {
+            NavigationLink(destination: ActivityDetailView(activity: activity)) {
+                HStack {
                     VStack(alignment: .leading) {
-                        Text("Next Reminder:").font(.caption)
-                        Text("\(nextTime)").font(.caption).foregroundColor(.secondary)
+                        Text(activity.name).font(.headline)
+                        Text("\(activity.notifications.count) reminders").font(.caption).foregroundColor(.secondary)
                     }
+                    Spacer()
+                    if let nextTime = activity.formatNextNotification() {
+                        VStack(alignment: .leading) {
+                            Text("Next Reminder:").font(.caption)
+                            Text("\(nextTime)").font(.caption).foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                    Text("Count: \(activity.count)").font(.subheadline)
+                        .padding(.trailing, 24) // Adjusted padding for badge
                 }
-                Spacer()
-                Text("Count: \(activity.count)").font(.subheadline)
+            }
+
+            let streak = activity.calculateStreak()
+            if streak > 1 {
+                GeometryReader { geometry in
+                    HStack(spacing: 1) {
+                        Text("🔥")
+                            .font(.system(size: 14))
+                        Text("\(streak)")
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemBackground))
+                            .shadow(color: .black.opacity(0.1), radius: 1, x: 0, y: 1)
+                    )
+                    .position(x: geometry.size.width - 10, y: geometry.size.height * 0.1)
+                }
             }
         }
         .swipeActions(edge: .leading) {

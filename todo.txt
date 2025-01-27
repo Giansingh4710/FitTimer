@@ -1,9 +1,13 @@
 
 FitTimer:
-- Click notification to take you to an activity or workout.
-- Streaks
-- Calender view 
+- Sort by last updated for activities 
+- Export import buttons laggy sometimes
+- Import history isnÕt in order (Push ups)
 
 Done:
 - UUID replace csv. Importing fixed and works fin
 - Swipe right to input count don't work sometimes (didn't work but added input in detaiulsview)
+- Click notification to take you to an activity or workout.
+- Confirm delete items from list
+- Streaks
+- Calender view 

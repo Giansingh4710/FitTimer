@@ -150,7 +150,7 @@ struct WorkoutEditorView: View {
             draftName = plan.name
             draftExerciseDuration = String(plan.exercises.first?.duration ?? 0)
             draftRestDuration = String(plan.exercises.first?.rest ?? 0)
-            draftExercises = plan.exercises.map { $0.copy() }
+            draftExercises = plan.exercises.map { $0 }
             notificationTimes = plan.notifications
             notificationText.title = plan.notificationText.title
             notificationText.body = plan.notificationText.body
@@ -173,14 +173,14 @@ struct WorkoutEditorView: View {
         }
         .onChange(of: draftExerciseDuration) { newValue in
             let value = Int(newValue) ?? 0
-            for exercise in draftExercises {
-                exercise.duration = value
+            for index in draftExercises.indices {
+                draftExercises[index].duration = value
             }
         }
         .onChange(of: draftRestDuration) { newValue in
             let value = Int(newValue) ?? 0
-            for exercise in draftExercises {
-                exercise.rest = value
+            for index in draftExercises.indices {
+                draftExercises[index].rest = value
             }
         }
     }

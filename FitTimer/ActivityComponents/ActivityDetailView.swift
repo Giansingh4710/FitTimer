@@ -25,7 +25,13 @@ struct ActivityDetailView: View {
                 Section {
                     TextField("Activity Name", text: $newName)
                 } header: {
-                    Text("Activity Details")
+                    HStack {
+                        Text("Activity Name")
+                        InfoButton(
+                            title: "📝 Activity Name",
+                            message: "UUID: \(activity.id.uuidString)"
+                        )
+                    }
                 }
 
                 // Counter Section
@@ -86,6 +92,18 @@ struct ActivityDetailView: View {
                         Spacer()
                         Text(formatedDate(lastCountedDate))
                     }.font(.subheadline)
+                    HStack {
+                        Text("Current Streak")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(String(activity.calculateStreak()))
+                    }.font(.subheadline)
+                    HStack {
+                        Text("Today's Count")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(String(activity.todayCount))
+                    }.font(.subheadline)
                 } header: {
                     Text("Counter")
                 }
@@ -93,6 +111,11 @@ struct ActivityDetailView: View {
                 // Settings Section
                 Section {
                     Toggle("Reset Count Daily", isOn: $newResetDaily)
+                    Button("") {
+                        for history in activity.history {
+                           print("Date: \(history.date), Count: \(history.count)") 
+                        }
+                    }
                 } header: {
                     Text("Settings")
                 }

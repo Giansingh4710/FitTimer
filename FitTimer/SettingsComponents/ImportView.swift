@@ -49,11 +49,13 @@ struct ImportPreviewView: View {
                         switch currentItem {
                         case let .activity(act):
                             if idIsUnique(activity: act) {
+                                act.history = act.history.sorted { $0.date < $1.date }
                                 modelContext.insert(act)
                                 moveToNext()
                             }
                         case let .workoutPlan(plan):
                             if idIsUnique(plan: plan) {
+                                plan.completedHistory = plan.completedHistory.sorted { $0 < $1 }
                                 modelContext.insert(plan)
                                 moveToNext()
                             }

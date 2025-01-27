@@ -7,6 +7,9 @@ struct ListOfWorkouts: View {
     @Environment(\.modelContext) var modelContext
     @EnvironmentObject private var lnManager: LocalNotificationManager
 
+    @State private var workoutToDelete: WorkoutPlan?
+    @State private var showDeleteAlert = false
+
     var body: some View {
         Section {
             ForEach(workoutPlans) { plan in
@@ -29,14 +32,10 @@ struct ListOfWorkouts: View {
                         Spacer()
                     }
                 }
-                .contextMenu {
-                    Button("Delete", role: .destructive) {
-                        deleteWorkout(plan)
-                    }
-                }
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        deleteWorkout(plan)
+                        workoutToDelete = plan
+                        showDeleteAlert = true
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
@@ -75,9 +74,16 @@ struct ListOfWorkouts: View {
                 }
             }
         }
-    }
-
-    private func deleteWorkout(_ plan: WorkoutPlan) {
-        modelContext.delete(plan)
+        .alert("Are you sure you want to delete this workout plan?", isPresented: $showDeleteAlert) {
+            Button("Delete", role: .destructive, action: {
+                if let plan = workoutToDelete {
+                    modelContext.delete(plan)
+                }
+            })
+            Button("Cancel", role: .cancel, action: {
+                workoutToDelete = nil
+                showDeleteAlert = false
+            })
+        }
     }
 }

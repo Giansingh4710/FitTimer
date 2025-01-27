@@ -1,19 +1,18 @@
 import SwiftData
 import SwiftUI
 
-@Model
-class NotificationTextData {
+struct NotificationTextData: Codable, Hashable {
     var title: String
     var body: String
-    init(title: String, body: String) {
-        self.title = title
-        self.body = body
-    }
 }
 
-@Model
-class Exercise {
-    @Attribute(.unique) var id: UUID
+struct ActivityHistory: Codable, Hashable {
+    var count: Int
+    var date: Date
+}
+
+struct Exercise: Codable, Identifiable, Hashable {
+    var id: UUID
     var name: String
     var duration: Int // in seconds
     var rest: Int // in seconds
@@ -23,10 +22,6 @@ class Exercise {
         self.name = name
         self.duration = duration
         self.rest = rest
-    }
-
-    func copy() -> Exercise {
-        return Exercise(name: name, duration: duration, rest: rest)
     }
 }
 
@@ -64,16 +59,6 @@ class WorkoutPlan {
 }
 
 @Model
-class ActivityHistory {
-    var count: Int
-    var date: Date
-    init(count: Int, date: Date) {
-        self.count = count
-        self.date = date
-    }
-}
-
-@Model
 class Activity {
     @Attribute(.unique) var id: UUID
     var createdAt: Date
@@ -85,7 +70,8 @@ class Activity {
     var resetDaily: Bool
     var lastCounted: Date
     var todayCount: Int
-    @Relationship(deleteRule: .cascade) var history: [ActivityHistory]
+
+    var history: [ActivityHistory]
 
     init(id: UUID = UUID(), name: String, count: Int = 0, notifications: [DateComponents] = [], resetDaily: Bool = true, createdAt: Date = Date(), lastCounted: Date = Date(), todayCount: Int = 0, history: [ActivityHistory] = [], notificationText: NotificationTextData = NotificationTextData(title: "", body: "")) {
         self.id = id
@@ -135,6 +121,8 @@ class Activity {
             }
             lastCounted = Date()
             todayCount = 0
+            let sortedHistory = history.sorted { $0.date > $1.date }
+            history = sortedHistory
         }
     }
 
@@ -156,6 +144,27 @@ class Activity {
             print("Date: \(historyItem.date), Count: \(historyItem.count)")
         }
     }
+
+    func calculateStreak() -> Int {
+        guard !history.isEmpty else { return 0 }
+
+        var currentStreak = 0 // Start with 1 for today
+        let calendar = Calendar.current
+        var lastDate = calendar.startOfDay(for: Date())
+
+        for historyItem in history {
+            let historyDate = calendar.startOfDay(for: historyItem.date)
+            let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
+            if daysBetween == 1 {
+                currentStreak += 1
+                lastDate = historyDate
+            } else {
+                break
+            }
+        }
+
+        return currentStreak
+    }
 }
 
 extension DateFormatter {
@@ -166,3 +175,5 @@ extension DateFormatter {
         return formatter
     }()
 }
+
+enum MainAppItems: String { case workout_plans, activities }

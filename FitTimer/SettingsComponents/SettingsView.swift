@@ -7,26 +7,25 @@ struct SettingsView: View {
     @Query private var the_activities: [Activity]
 
     @State private var showExport = false
-    @State private var exportType: ImportExportType?
+    @State private var exportType: MainAppItems?
     @State private var showImport = false
-    @State private var importType: ImportExportType?
+    @State private var importType: MainAppItems?
 
     @State private var showError = false
     @State private var errorMessage = ""
 
     @State private var importObj: ImportObject? = nil // obj that has list of items to be imported from CSV file
 
-    enum ImportExportType { case workouts, activities }
 
     var body: some View {
         List {
             Section("Workouts") {
                 Button("Import Workout Plans") {
                     showImport = true
-                    importType = .workouts
+                    importType = .workout_plans
                 }
                 Button("Export Workout Plans") {
-                    exportType = .workouts
+                    exportType = .workout_plans
                     showExport = true
                 }
             }
@@ -61,7 +60,7 @@ struct SettingsView: View {
         .fileImporter(isPresented: $showImport, allowedContentTypes: [UTType.commaSeparatedText]) { result in
             switch result {
             case let .success(file):
-                if importType == .workouts {
+                if importType == .workout_plans {
                     importWorkouts(from: file)
                 } else if importType == .activities {
                     importActivities(from: file)
@@ -71,10 +70,10 @@ struct SettingsView: View {
             }
         }
         .fileExporter(isPresented: $showExport,
-                      document: exportType == .workouts ?
+                      document: exportType == .workout_plans ?
                           CSVFile(initialText: exportWorkoutsCSV()) :
                           CSVFile(initialText: exportActivitiesCSV()),
-                      contentType: .commaSeparatedText, defaultFilename: exportType == .workouts ? "workouts.csv" : "activities.csv")
+                      contentType: .commaSeparatedText, defaultFilename: exportType == .workout_plans ? "workouts.csv" : "activities.csv")
         { result in
             if case .success = result {
                 print("Saved successfully")

@@ -293,7 +293,7 @@ struct WorkoutPlanDetailsViewForImport: View {
                             .foregroundColor(.secondary)
                             .padding(.vertical, 8)
                     } else {
-                        ForEach(plan.wrappedValue.completedHistory.sorted(by: >), id: \.self) { date in
+                        ForEach(plan.wrappedValue.completedHistory.sorted(by: <), id: \.self) { date in
                             HStack {
                                 Text("✓")
                                     .foregroundColor(.green)

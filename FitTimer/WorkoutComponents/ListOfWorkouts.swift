@@ -13,23 +13,43 @@ struct ListOfWorkouts: View {
     var body: some View {
         Section {
             ForEach(workoutPlans) { plan in
-                NavigationLink(destination: WorkoutDetailView(plan: plan)) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(plan.name)
-                                .font(.system(.body, design: .rounded))
-                                .fontWeight(.medium)
+                ZStack(alignment: .center) {
+                    NavigationLink(destination: WorkoutDetailView(plan: plan)) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(plan.name)
+                                    .font(.system(.body, design: .rounded))
+                                    .fontWeight(.medium)
 
-                            HStack(spacing: 8) {
-                                Text(formatDuration(getTotalWorkoutTime(plan)))
-                                Text("•")
-                                Text("\(plan.notifications.count) reminders")
+                                HStack(spacing: 8) {
+                                    Text(formatDuration(getTotalWorkoutTime(plan)))
+                                    Text("•")
+                                    Text("\(plan.notifications.count) reminders")
+                                }
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundColor(.secondary)
                             }
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundColor(.secondary)
-                        }
 
-                        Spacer()
+                            Spacer()
+                        }
+                    }
+
+                    let streak = plan.calculateStreak()
+                    if streak > -1 {
+                        GeometryReader { geometry in
+                            HStack(spacing: 1) {
+                                Text("🔥")
+                                    .font(.system(size: 14))
+                                Text("\(streak)")
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.systemBackground))
+                                    .shadow(color: .black.opacity(0.1), radius: 1, x: 0, y: 1)
+                            )
+                            .position(x: geometry.size.width - 10, y: geometry.size.height * 0.1)
+                        }
                     }
                 }
                 .swipeActions(edge: .trailing) {

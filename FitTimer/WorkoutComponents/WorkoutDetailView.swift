@@ -19,7 +19,7 @@ struct WorkoutDetailView: View {
             HStack(spacing: 8) {
                 Text("\(plan.completedHistory.count) workouts completed")
                 Text("•")
-                Text("\(plan.notifications.count) daily reminders")
+                Text("Longest 🔥: \(plan.getLongestStreak())")
             }
             .font(.system(.caption, design: .rounded))
             .foregroundColor(.secondary)
@@ -98,6 +98,7 @@ struct WorkoutEditorView: View {
     @State private var draftExerciseDuration: String = ""
     @State private var draftRestDuration: String = ""
     @State private var draftExercises: [Exercise] = []
+    @State private var draftHistory: [Date] = []
 
     @State private var notificationTimes: [DateComponents] = []
     @State private var notificationText: NotificationTextData = .init(title: "", body: "")
@@ -139,10 +140,27 @@ struct WorkoutEditorView: View {
                     .padding(.vertical, 8)
                 }
                 .onDelete(perform: deleteExercise)
+                .onMove(perform: moveExercise)
 
                 Button(action: addExercise) {
                     Label("Add Exercise", systemImage: "plus.circle.fill")
                         .foregroundColor(.accentColor)
+                }
+            }
+
+            Section {
+                if draftHistory.count > 0 {
+                    DisclosureGroup("Workout History: \(draftHistory.count)") {
+                        ForEach(draftHistory, id: \.self) { entry in
+                            HStack {
+                                Text(entry, style: .date)
+                                // Spacer()
+                                // Text("Count: \(entry.count)") .bold()
+                            }
+                            .font(.subheadline)
+                        }
+                        .onDelete(perform: deleteHistory)
+                    }
                 }
             }
         }
@@ -153,6 +171,7 @@ struct WorkoutEditorView: View {
             draftExerciseDuration = String(plan.exercises.first?.duration ?? 0)
             draftRestDuration = String(plan.exercises.first?.rest ?? 0)
             draftExercises = plan.exercises.map { $0 }
+            draftHistory = plan.completedHistory.map { $0 }
             notificationTimes = plan.notifications
             notificationText.title = plan.notificationText.title
             notificationText.body = plan.notificationText.body
@@ -163,6 +182,7 @@ struct WorkoutEditorView: View {
                 Button("Save") {
                     plan.name = draftName
                     plan.exercises = draftExercises
+                    plan.completedHistory = draftHistory
                     plan.notifications = notificationTimes
                     (plan.notificationText.title, plan.notificationText.body) = (notificationText.title, notificationText.body)
                     plan.notificationsOff = notificationsOff
@@ -188,6 +208,10 @@ struct WorkoutEditorView: View {
         }
     }
 
+    private func deleteHistory(at offsets: IndexSet) {
+        draftHistory.remove(atOffsets: offsets)
+    }
+
     private func addExercise() {
         let duration = draftExercises.last?.duration ?? 0
         let rest = draftExercises.last?.rest ?? 0
@@ -197,5 +221,9 @@ struct WorkoutEditorView: View {
 
     private func deleteExercise(at offsets: IndexSet) {
         draftExercises.remove(atOffsets: offsets)
+    }
+
+    private func moveExercise(from source: IndexSet, to destination: Int) {
+        draftExercises.move(fromOffsets: source, toOffset: destination)
     }
 }

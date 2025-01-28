@@ -105,13 +105,13 @@ struct ActivityDetailView: View {
                         Text(String(activity.todayCount))
                     }.font(.subheadline)
                     HStack {
-                        Text("Current Streak")
+                        Text("Current Streak 🔥")
                             .foregroundColor(.secondary)
                         Spacer()
                         Text(String(activity.calculateStreak()))
                     }.font(.subheadline)
                     HStack {
-                        Text("Longest Streak")
+                        Text("Longest Streak 🔥")
                             .foregroundColor(.secondary)
                         Spacer()
                         Text(String(activity.getLongestStreak()))

@@ -1,7 +1,5 @@
 
 FitTimer:
-- Sort by last updated for activities 
-- Export import buttons laggy sometimes
 
 Done:
 - UUID replace csv. Importing fixed and works fin
@@ -13,4 +11,7 @@ Done:
 - Show option to see longest Streak
 - Toggle to get or not get notifications
 - Import history isnÕt in order (Push ups) (changed history into struct instead of class with @Model)
+  - Export import buttons laggy sometimes (I think changed to struct fixed this too maybe)
 - Skip option in workouts for an exercise
+- Sort by last updated for activities 
+- reorder exercise list items in workout edits

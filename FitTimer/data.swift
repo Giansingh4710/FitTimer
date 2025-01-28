@@ -51,6 +51,56 @@ class WorkoutPlan {
         }
     }
 
+    func calculateStreak() -> Int {
+        guard !completedHistory.isEmpty else { return 0 }
+
+        var currentStreak = 0
+        let calendar = Calendar.current
+        var lastDate = calendar.startOfDay(for: Date())
+
+        for dateItem in completedHistory {
+            let historyDate = calendar.startOfDay(for: dateItem)
+            let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
+            if daysBetween == -1 || daysBetween == 0 {
+                currentStreak += 1
+                lastDate = historyDate
+            } else {
+                break
+            }
+        }
+
+        return currentStreak
+    }
+
+    func getLongestStreak() -> Int {
+        guard !completedHistory.isEmpty else { return 0 }
+
+        var longestStreak = 0
+        var currentStreak = 0
+        let calendar = Calendar.current
+        var lastDate = calendar.startOfDay(for: Date())
+
+        for dateItem in completedHistory {
+            let historyDate = calendar.startOfDay(for: dateItem)
+            let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
+            if daysBetween == -1 || daysBetween == 0 {
+                currentStreak += 1
+            } else {
+                if currentStreak > longestStreak {
+                    longestStreak = currentStreak
+                }
+                currentStreak = 0
+            }
+            lastDate = historyDate
+        }
+
+        if currentStreak > longestStreak {
+            longestStreak = currentStreak
+        }
+
+        return longestStreak
+    }
+
     func print_workout() {
         print("name: \(name)")
         print("createdAt: \(createdAt)")
@@ -125,8 +175,6 @@ class Activity {
             }
             lastCounted = Date()
             todayCount = 0
-            let sortedHistory = history.sorted { $0.date > $1.date }
-            history = sortedHistory
         }
     }
 
@@ -159,7 +207,7 @@ class Activity {
         for historyItem in history {
             let historyDate = calendar.startOfDay(for: historyItem.date)
             let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
-            if daysBetween == 1 {
+            if daysBetween == -1 {
                 currentStreak += 1
                 lastDate = historyDate
             } else {
@@ -190,6 +238,10 @@ class Activity {
                 currentStreak = 0
             }
             lastDate = historyDate
+        }
+
+        if currentStreak > longestStreak {
+            longestStreak = currentStreak
         }
 
         return longestStreak

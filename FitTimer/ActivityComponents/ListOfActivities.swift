@@ -13,7 +13,7 @@ struct ListOfActivities: View {
     @State private var swipedRightOnActivity: Activity?
 
     // @Query(sort: \Activity.createdAt, order: .reverse) private var activities: [Activity]
-    @Query(sort: \Activity.createdAt) private var activities: [Activity]
+    @Query(sort: \Activity.lastCounted, order: .reverse) private var activities: [Activity]
     @State private var selectedActivity: Activity? = nil
     @Environment(\.modelContext) var modelContext
     @EnvironmentObject private var lnManager: LocalNotificationManager

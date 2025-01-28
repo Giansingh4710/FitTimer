@@ -8,38 +8,20 @@ struct WorkoutInProgressView: View {
 
     @State private var currentExerciseIndex = 0
     @State private var isResting = true
-    @State private var timeRemaining = 0
+    @State private var timeLeftForCurrentRound = 0
     @State private var timer: Timer?
     private let speechSynthesizer = AVSpeechSynthesizer()
 
-    private var upcomingExercises: [UpcomingExercise] {
-        if currentExerciseIndex >= plan.exercises.count {
-            return []
+    private var totalTimeRemaining: Int {
+        var total = timeLeftForCurrentRound
+
+        if isResting && currentExerciseIndex < plan.exercises.count {
+            total += plan.exercises[currentExerciseIndex].duration
         }
 
-        let startIndex = currentExerciseIndex + 1
-        return Array(plan.exercises[startIndex...].prefix(3))
-            .map { UpcomingExercise(name: $0.name, duration: $0.duration) }
-    }
-
-    private var totalTimeRemaining: Int {
-        // Calculate time remaining in current exercise/rest
-        var total = timeRemaining
-
-        // If we're not done yet, add remaining exercises and rests
-        if currentExerciseIndex < plan.exercises.count - 1 {
-            // Add remaining time from future exercises
-            for index in (currentExerciseIndex + 1) ..< plan.exercises.count {
-                total += plan.exercises[index].duration
-                if index < plan.exercises.count - 1 { // Don't add rest after last exercise
-                    total += plan.exercises[index].rest
-                }
-            }
-
-            // If we're in an exercise, add the rest period after it
-            if !isResting && currentExerciseIndex < plan.exercises.count - 1 {
-                total += plan.exercises[currentExerciseIndex].rest
-            }
+        for index in (currentExerciseIndex + 1) ..< plan.exercises.count {
+            total += plan.exercises[index].rest
+            total += plan.exercises[index].duration
         }
 
         return total
@@ -48,17 +30,14 @@ struct WorkoutInProgressView: View {
     var body: some View {
         VStack {
             if currentExerciseIndex < plan.exercises.count {
-                let currentExercise = currentExerciseIndex >= 0 ? plan.exercises[currentExerciseIndex] : plan.exercises[0]
+                let currentExercise = plan.exercises[currentExerciseIndex]
                 WorkoutTimerView(
                     exerciseName: isResting ? "Get Ready for \(currentExercise.name)" : currentExercise.name,
-                    timeRemaining: timeRemaining,
-                    totalTime: isResting ?
-                        (currentExerciseIndex >= 0 ? currentExercise.rest : 5) :
-                        currentExercise.duration,
+                    timeLeftForCurrentRound: timeLeftForCurrentRound,
+                    totalTimeForCurrentRound: isResting ? currentExercise.rest : currentExercise.duration,
                     isResting: isResting,
-                    upcomingExercises: upcomingExercises,
-                    currentExerciseNumber: max(1, currentExerciseIndex + 1),
-                    totalExercises: plan.exercises.count,
+                    currentExerciseIndex: currentExerciseIndex,
+                    allExercises: plan.exercises,
                     totalTimeRemaining: totalTimeRemaining
                 )
 
@@ -120,9 +99,8 @@ struct WorkoutInProgressView: View {
 
     private func startTimer(isInitialRest: Bool = false) {
         let exercise = plan.exercises[currentExerciseIndex]
-        timeRemaining = isResting ?
-            (isInitialRest ? 10 : exercise.rest) :
-            exercise.duration
+        // timeLeftForCurrentRound = isResting ? (isInitialRest ? 15 : exercise.rest) : exercise.duration
+        timeLeftForCurrentRound = isResting ? exercise.rest : exercise.duration
 
         announce(isResting ?
             (isInitialRest ? "Get ready to start" : "Rest") :
@@ -135,14 +113,14 @@ struct WorkoutInProgressView: View {
     }
 
     private func handleTimerTick(exercise: Exercise) {
-        if timeRemaining > 0 {
-            timeRemaining -= 1
+        if timeLeftForCurrentRound > 0 {
+            timeLeftForCurrentRound -= 1
             if !isResting {
-                if timeRemaining == exercise.duration / 2 {
+                if timeLeftForCurrentRound == exercise.duration / 2 {
                     announce("Halfway there!")
                 }
-                if timeRemaining <= 3 && timeRemaining > 0 {
-                    announce("\(timeRemaining)")
+                if timeLeftForCurrentRound <= 3 && timeLeftForCurrentRound > 0 {
+                    announce("\(timeLeftForCurrentRound)")
                 }
             }
         } else {
@@ -201,13 +179,23 @@ struct UpcomingExercise: Equatable, Identifiable {
 
 struct WorkoutTimerView: View {
     let exerciseName: String
-    let timeRemaining: Int
-    let totalTime: Int
+    let timeLeftForCurrentRound: Int
+    let totalTimeForCurrentRound: Int
     let isResting: Bool
-    let upcomingExercises: [UpcomingExercise]
-    let currentExerciseNumber: Int
-    let totalExercises: Int
+
+    let currentExerciseIndex: Int
+    let allExercises: [Exercise]
     let totalTimeRemaining: Int
+
+    private var upcomingExercises: [UpcomingExercise] {
+        if currentExerciseIndex >= allExercises.count {
+            return []
+        }
+
+        let startIndex = currentExerciseIndex + 1
+        return Array(allExercises[startIndex...].prefix(3))
+            .map { UpcomingExercise(name: $0.name, duration: $0.duration) }
+    }
 
     var body: some View {
         VStack(spacing: 24) {
@@ -217,11 +205,11 @@ struct WorkoutTimerView: View {
                     .fontWeight(.bold)
                     .foregroundColor(isResting ? .red : .green)
 
-                Text("Exercise \(currentExerciseNumber)/\(totalExercises)")
+                Text("Exercise \(max(1, currentExerciseIndex + 1))/\(allExercises.count)")
                     .font(.headline)
                     .foregroundColor(.secondary)
 
-                Text("Total Time: \(formatTime(totalTimeRemaining))")
+                Text("Total Time Left: \(formatTime(totalTimeRemaining))")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -234,13 +222,13 @@ struct WorkoutTimerView: View {
                     .foregroundColor(isResting ? .red : .green)
 
                 Circle()
-                    .trim(from: 0, to: CGFloat(timeRemaining) / CGFloat(totalTime))
+                    .trim(from: 0, to: CGFloat(timeLeftForCurrentRound) / CGFloat(totalTimeForCurrentRound))
                     .stroke(style: StrokeStyle(lineWidth: 20, lineCap: .round, lineJoin: .round))
                     .foregroundColor(isResting ? .red : .green)
                     .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 0.5), value: timeRemaining)
+                    .animation(.easeInOut(duration: 0.5), value: timeLeftForCurrentRound)
 
-                Text("\(timeRemaining)")
+                Text("\(timeLeftForCurrentRound)")
                     .font(.system(size: 50, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
             }
@@ -280,6 +268,7 @@ struct WorkoutTimerView: View {
                 .cornerRadius(16)
             }
         }
+        .onAppear {}
     }
 
     private func formatTime(_ seconds: Int) -> String {

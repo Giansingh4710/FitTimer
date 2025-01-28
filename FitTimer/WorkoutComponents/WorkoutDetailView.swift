@@ -101,13 +101,15 @@ struct WorkoutEditorView: View {
 
     @State private var notificationTimes: [DateComponents] = []
     @State private var notificationText: NotificationTextData = .init(title: "", body: "")
+    @State private var notificationsOff: Bool = false
 
     @EnvironmentObject private var lnManager: LocalNotificationManager
     var body: some View {
         Form {
             AddNotificationView(
                 notificationTimes: $notificationTimes,
-                notificationText: $notificationText
+                notificationText: $notificationText,
+                notificationsOff: $notificationsOff
             )
             WorkoutNameAndTimeInputs(workoutName: $draftName, exerciseDuration: $draftExerciseDuration, restDuration: $draftRestDuration)
 
@@ -154,7 +156,7 @@ struct WorkoutEditorView: View {
             notificationTimes = plan.notifications
             notificationText.title = plan.notificationText.title
             notificationText.body = plan.notificationText.body
-            print(notificationText.body)
+            notificationsOff = plan.notificationsOff
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -163,6 +165,7 @@ struct WorkoutEditorView: View {
                     plan.exercises = draftExercises
                     plan.notifications = notificationTimes
                     (plan.notificationText.title, plan.notificationText.body) = (notificationText.title, notificationText.body)
+                    plan.notificationsOff = notificationsOff
 
                     Task {
                         await lnManager.scheduleNotifications(for: plan)

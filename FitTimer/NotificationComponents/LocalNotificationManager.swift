@@ -97,6 +97,9 @@ class LocalNotificationManager: NSObject, ObservableObject {
 
     func scheduleNotifications(for activityOrWorkout: any CommonProps) async {
         removeNotifications(for: activityOrWorkout)
+        if activityOrWorkout.notificationsOff {
+            return
+        }
 
         let isWorkoutPlan = activityOrWorkout is WorkoutPlan
         for components in activityOrWorkout.notifications {
@@ -159,6 +162,7 @@ protocol CommonProps {
     var name: String { get }
     var notifications: [DateComponents] { get }
     var notificationText: NotificationTextData { get }
+    var notificationsOff: Bool { get }
 }
 
 extension Activity: CommonProps {}

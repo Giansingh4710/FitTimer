@@ -11,6 +11,7 @@ struct AddActivityModal: View {
 
     @State var notificationTimes: [DateComponents] = []
     @State var notificationText: NotificationTextData = .init(title: "", body: "")
+    @State var notificationsOff: Bool = false
 
     @State private var resetDaily: Bool = true
 
@@ -27,7 +28,8 @@ struct AddActivityModal: View {
 
                 AddNotificationView(
                     notificationTimes: $notificationTimes,
-                    notificationText: $notificationText
+                    notificationText: $notificationText,
+                    notificationsOff: $notificationsOff
                 )
             }
             .navigationTitle("New Activity")
@@ -57,7 +59,7 @@ struct AddActivityModal: View {
     }
 
     private func saveActivity() async {
-        let newActivity = Activity(name: activityName, count: 0, notifications: notificationTimes, resetDaily: resetDaily)
+        let newActivity = Activity(name: activityName, count: 0, notifications: notificationTimes, resetDaily: resetDaily, notificationsOff: notificationsOff)
         modelContext.insert(newActivity)
 
         await lnManager.scheduleNotifications(for: newActivity)

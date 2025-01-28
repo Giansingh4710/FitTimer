@@ -2,7 +2,6 @@
 FitTimer:
 - Sort by last updated for activities 
 - Export import buttons laggy sometimes
-- Import history isnÕt in order (Push ups)
 
 Done:
 - UUID replace csv. Importing fixed and works fin
@@ -11,3 +10,7 @@ Done:
 - Confirm delete items from list
 - Streaks
 - Calender view 
+- Show option to see longest Streak
+- Toggle to get or not get notifications
+- Import history isnÕt in order (Push ups) (changed history into struct instead of class with @Model)
+- Skip option in workouts for an exercise

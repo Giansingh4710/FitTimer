@@ -8,12 +8,13 @@ struct ActivityDetailView: View {
 
     @State private var newName: String = ""
     @State private var newCount: Int = 0
-    @State private var notificationTimes: [DateComponents] = []
     @State private var newResetDaily: Bool = true
     @State private var lastCountedDate: Date = .init()
     @State private var createdAt: Date = .init()
 
+    @State private var notificationTimes: [DateComponents] = []
     @State private var notificationText: NotificationTextData = .init(title: "", body: "")
+    @State private var notificationsOff: Bool = false
 
     @State private var showInputAlert = false
     @State private var addToCount = ""
@@ -34,7 +35,12 @@ struct ActivityDetailView: View {
                     }
                 }
 
-                // Counter Section
+                Section {
+                    Toggle("Reset Count Daily", isOn: $newResetDaily)
+                } header: {
+                    Text("Settings")
+                }
+
                 Section {
                     VStack(spacing: 12) {
                         // Counter Controls
@@ -93,31 +99,25 @@ struct ActivityDetailView: View {
                         Text(formatedDate(lastCountedDate))
                     }.font(.subheadline)
                     HStack {
+                        Text("Today's Count")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(String(activity.todayCount))
+                    }.font(.subheadline)
+                    HStack {
                         Text("Current Streak")
                             .foregroundColor(.secondary)
                         Spacer()
                         Text(String(activity.calculateStreak()))
                     }.font(.subheadline)
                     HStack {
-                        Text("Today's Count")
+                        Text("Longest Streak")
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text(String(activity.todayCount))
+                        Text(String(activity.getLongestStreak()))
                     }.font(.subheadline)
                 } header: {
                     Text("Counter")
-                }
-
-                // Settings Section
-                Section {
-                    Toggle("Reset Count Daily", isOn: $newResetDaily)
-                    Button("") {
-                        for history in activity.history {
-                           print("Date: \(history.date), Count: \(history.count)") 
-                        }
-                    }
-                } header: {
-                    Text("Settings")
                 }
 
                 // Activity History Section
@@ -139,7 +139,8 @@ struct ActivityDetailView: View {
 
                 AddNotificationView(
                     notificationTimes: $notificationTimes,
-                    notificationText: $notificationText
+                    notificationText: $notificationText,
+                    notificationsOff: $notificationsOff
                 )
             }
             .background(Color(UIColor.systemGroupedBackground))
@@ -168,6 +169,7 @@ struct ActivityDetailView: View {
             lastCountedDate = activity.lastCounted
             createdAt = activity.createdAt
             notificationText = activity.notificationText
+            notificationsOff = activity.notificationsOff
         }
         .alert("How many '\(activity.name)'s did you do?", isPresented: $showInputAlert) {
             TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
@@ -205,6 +207,7 @@ struct ActivityDetailView: View {
             activity.count = newCount
         }
         activity.notificationText = notificationText
+        activity.notificationsOff = notificationsOff
         dismiss()
     }
 

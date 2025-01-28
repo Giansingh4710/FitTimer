@@ -6,7 +6,7 @@ struct WorkoutInProgressView: View {
     let onComplete: () -> Void
     let onCancel: () -> Void
 
-    @State private var currentExerciseIndex = -1
+    @State private var currentExerciseIndex = 0
     @State private var isResting = true
     @State private var timeRemaining = 0
     @State private var timer: Timer?
@@ -50,7 +50,7 @@ struct WorkoutInProgressView: View {
             if currentExerciseIndex < plan.exercises.count {
                 let currentExercise = currentExerciseIndex >= 0 ? plan.exercises[currentExerciseIndex] : plan.exercises[0]
                 WorkoutTimerView(
-                    exerciseName: isResting ? "Get Ready" : currentExercise.name,
+                    exerciseName: isResting ? "Get Ready for \(currentExercise.name)" : currentExercise.name,
                     timeRemaining: timeRemaining,
                     totalTime: isResting ?
                         (currentExerciseIndex >= 0 ? currentExercise.rest : 5) :
@@ -62,16 +62,28 @@ struct WorkoutInProgressView: View {
                     totalTimeRemaining: totalTimeRemaining
                 )
 
-                Button(action: cancelWorkout) {
-                    Text("Cancel Workout")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.red)
-                        .cornerRadius(10)
+                HStack {
+                    Button(action: cancelWorkout) {
+                        Text("Cancel Workout")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.red)
+                            .cornerRadius(10)
+                    }
+                    .padding()
+                    Button(action: skipToNextThing) {
+                        Text("Skip to \(isResting ? "\(currentExercise.name)" : "Rest")")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .cornerRadius(10)
+                    }
+                    .padding()
                 }
-                .padding()
             } else {
                 VStack(spacing: 20) {
                     Image(systemName: "checkmark.circle.fill")
@@ -107,9 +119,9 @@ struct WorkoutInProgressView: View {
     }
 
     private func startTimer(isInitialRest: Bool = false) {
-        let exercise = currentExerciseIndex >= 0 ? plan.exercises[currentExerciseIndex] : plan.exercises[0]
+        let exercise = plan.exercises[currentExerciseIndex]
         timeRemaining = isResting ?
-            (isInitialRest ? 5 : exercise.rest) :
+            (isInitialRest ? 10 : exercise.rest) :
             exercise.duration
 
         announce(isResting ?
@@ -152,10 +164,6 @@ struct WorkoutInProgressView: View {
                     currentExerciseIndex += 1
                 }
             }
-
-            if currentExerciseIndex >= plan.exercises.count {
-                // HistoryManager.shared.logWorkoutCompletion(plan)
-            }
         }
     }
 
@@ -170,8 +178,20 @@ struct WorkoutInProgressView: View {
         speechSynthesizer.stopSpeaking(at: .immediate)
         onCancel()
     }
-}
 
+    private func skipToNextThing() {
+        if isResting {
+            isResting = false
+            startTimer()
+        } else {
+            if currentExerciseIndex < plan.exercises.count - 1 {
+                isResting = true
+                startTimer()
+            }
+            currentExerciseIndex += 1
+        }
+    }
+}
 
 struct UpcomingExercise: Equatable, Identifiable {
     let id = UUID()

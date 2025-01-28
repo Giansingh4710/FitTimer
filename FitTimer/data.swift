@@ -31,11 +31,12 @@ class WorkoutPlan {
     var createdAt: Date
     var name: String
     @Relationship(deleteRule: .cascade) var notificationText: NotificationTextData
+    var notificationsOff: Bool
     var notifications: [DateComponents]
     var completedHistory: [Date]
     @Relationship(deleteRule: .cascade) var exercises: [Exercise]
 
-    init(id: UUID = UUID(), createdAt: Date = Date(), completedHistory: [Date] = [], name: String, notifications: [DateComponents] = [], exercises: [Exercise] = [], notificationText: NotificationTextData = NotificationTextData(title: "", body: "")) {
+    init(id: UUID = UUID(), createdAt: Date = Date(), completedHistory: [Date] = [], name: String, notifications: [DateComponents] = [], exercises: [Exercise] = [], notificationText: NotificationTextData = NotificationTextData(title: "", body: ""), notificationsOff: Bool = false) {
         self.id = id
         self.createdAt = createdAt
         self.completedHistory = completedHistory
@@ -43,6 +44,7 @@ class WorkoutPlan {
         self.notifications = notifications
         self.exercises = exercises
         self.notificationText = notificationText
+        self.notificationsOff = notificationsOff
         if self.notificationText.title == "" {
             self.notificationText.title = name
             self.notificationText.body = "Reminder for \(name)"
@@ -64,6 +66,7 @@ class Activity {
     var createdAt: Date
     var name: String
     var count: Int
+    var notificationsOff: Bool
     var notifications: [DateComponents]
     @Relationship(deleteRule: .cascade) var notificationText: NotificationTextData
 
@@ -73,7 +76,7 @@ class Activity {
 
     var history: [ActivityHistory]
 
-    init(id: UUID = UUID(), name: String, count: Int = 0, notifications: [DateComponents] = [], resetDaily: Bool = true, createdAt: Date = Date(), lastCounted: Date = Date(), todayCount: Int = 0, history: [ActivityHistory] = [], notificationText: NotificationTextData = NotificationTextData(title: "", body: "")) {
+    init(id: UUID = UUID(), name: String, count: Int = 0, notifications: [DateComponents] = [], resetDaily: Bool = true, createdAt: Date = Date(), lastCounted: Date = Date(), todayCount: Int = 0, history: [ActivityHistory] = [], notificationText: NotificationTextData = NotificationTextData(title: "", body: ""), notificationsOff: Bool = false) {
         self.id = id
         self.name = name
         self.count = count
@@ -83,6 +86,7 @@ class Activity {
         self.lastCounted = lastCounted
         self.todayCount = todayCount
         self.history = history
+        self.notificationsOff = notificationsOff
         self.notificationText = notificationText
         if self.notificationText.title == "" {
             self.notificationText.title = name
@@ -148,7 +152,7 @@ class Activity {
     func calculateStreak() -> Int {
         guard !history.isEmpty else { return 0 }
 
-        var currentStreak = 0 // Start with 1 for today
+        var currentStreak = 0
         let calendar = Calendar.current
         var lastDate = calendar.startOfDay(for: Date())
 
@@ -164,6 +168,31 @@ class Activity {
         }
 
         return currentStreak
+    }
+
+    func getLongestStreak() -> Int {
+        guard !history.isEmpty else { return 0 }
+
+        var longestStreak = 0
+        var currentStreak = 0
+        let calendar = Calendar.current
+        var lastDate = calendar.startOfDay(for: Date())
+
+        for historyItem in history {
+            let historyDate = calendar.startOfDay(for: historyItem.date)
+            let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
+            if daysBetween == -1 {
+                currentStreak += 1
+            } else {
+                if currentStreak > longestStreak {
+                    longestStreak = currentStreak
+                }
+                currentStreak = 0
+            }
+            lastDate = historyDate
+        }
+
+        return longestStreak
     }
 }
 

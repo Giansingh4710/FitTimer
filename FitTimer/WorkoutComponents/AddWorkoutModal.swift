@@ -12,7 +12,8 @@ struct AddWorkoutModal: View {
     @State private var bulkExercises: String = ""
 
     @State private var notificationTimes: [DateComponents] = []
-    @State var notificationText: NotificationTextData = .init(title: "", body: "")
+    @State private var notificationText: NotificationTextData = .init(title: "", body: "")
+    @State private var notificationsOff: Bool = false
     @EnvironmentObject private var lnManager: LocalNotificationManager
     @State private var showingNotificationPermissionAlert = false
 
@@ -60,7 +61,8 @@ struct AddWorkoutModal: View {
                 }
                 AddNotificationView(
                     notificationTimes: $notificationTimes,
-                    notificationText: $notificationText
+                    notificationText: $notificationText,
+                    notificationsOff: $notificationsOff
                 )
             }
             .navigationTitle("New Workout")
@@ -73,7 +75,7 @@ struct AddWorkoutModal: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
-                            await saveActivity()
+                            await saveWorkout()
                         }
                     }.disabled(workoutName.isEmpty || exerciseDuration.isEmpty || restDuration.isEmpty || exercises.isEmpty)
                 }
@@ -81,7 +83,7 @@ struct AddWorkoutModal: View {
         }
     }
 
-    private func saveActivity() async {
+    private func saveWorkout() async {
         let exercisesObj = exercises.map {
             Exercise(
                 name: $0,
@@ -90,7 +92,7 @@ struct AddWorkoutModal: View {
             )
         }
 
-        let newWorkout = WorkoutPlan(name: workoutName, notifications: notificationTimes, exercises: exercisesObj, notificationText: notificationText)
+        let newWorkout = WorkoutPlan(name: workoutName, notifications: notificationTimes, exercises: exercisesObj, notificationText: notificationText, notificationsOff: notificationsOff)
         modelContext.insert(newWorkout)
         await lnManager.scheduleNotifications(for: newWorkout)
         dismiss()

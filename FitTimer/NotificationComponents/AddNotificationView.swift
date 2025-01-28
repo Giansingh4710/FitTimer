@@ -3,6 +3,7 @@ import SwiftUI
 struct AddNotificationView: View {
     @Binding var notificationTimes: [DateComponents]
     @Binding var notificationText: NotificationTextData
+    @Binding var notificationsOff: Bool
 
     @FocusState private var isNumberInputFocused: Bool
     @State private var showAlert: Bool = false
@@ -22,55 +23,58 @@ struct AddNotificationView: View {
                     )
                 }
             ) {
-                Section(header: Text("Notification Content")) {
-                    TextField("Title", text: $notificationText.title)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    ScrollView {
-                        TextEditor(text: $notificationText.body)
-                            .frame(minHeight: 60)
+                Toggle("Disable Notifications for this", isOn: $notificationsOff)
+                if notificationsOff == false {
+                    Section(header: Text("Notification Content")) {
+                        TextField("Title", text: $notificationText.title)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                        ScrollView {
+                            TextEditor(text: $notificationText.body)
+                                .frame(minHeight: 60)
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
                     }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
-                }
 
-                HStack {
-                    TextField("Enter number (max 100)", text: $numberOfRandomTimes)
-                        .keyboardType(.numberPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .focused($isNumberInputFocused)
-                        .submitLabel(.done)
+                    HStack {
+                        TextField("Enter number (max 100)", text: $numberOfRandomTimes)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .focused($isNumberInputFocused)
+                            .submitLabel(.done)
+                        Button(action: {
+                            generateRandomTimes()
+                        }) {
+                            Label("Generate Random Times", systemImage: "dice.fill")
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                    .padding(.vertical, 5)
+                    ForEach(notificationTimes.indices, id: \.self) { index in
+                        let date = Calendar.current.date(from: notificationTimes[index]) ?? Date()
+                        DatePicker("Time \(index + 1)", selection: Binding(
+                            get: { date },
+                            set: { newDate in
+                                notificationTimes[index] = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                            }
+                        ), displayedComponents: .hourAndMinute)
+                    }
+                    .onDelete(perform: deleteNotificationTime)
+
                     Button(action: {
-                        generateRandomTimes()
+                        notificationTimes.append(Calendar.current.dateComponents([.hour, .minute], from: Date()))
                     }) {
-                        Label("Generate Random Times", systemImage: "dice.fill")
+                        Label("Add Notification Time", systemImage: "plus.circle.fill")
                             .foregroundColor(.accentColor)
                     }
+                    .alert("Invalid Input", isPresented: $showAlert) {
+                        Button("OK", role: .cancel) {}
+                    } message: {
+                        Text("Please enter a number between 1 and 100")
+                    }
                 }
-                .padding(.vertical, 5)
-                ForEach(notificationTimes.indices, id: \.self) { index in
-                    let date = Calendar.current.date(from: notificationTimes[index]) ?? Date()
-                    DatePicker("Time \(index + 1)", selection: Binding(
-                        get: { date },
-                        set: { newDate in
-                            notificationTimes[index] = Calendar.current.dateComponents([.hour, .minute], from: newDate)
-                        }
-                    ), displayedComponents: .hourAndMinute)
-                }
-                .onDelete(perform: deleteNotificationTime)
-
-                Button(action: {
-                    notificationTimes.append(Calendar.current.dateComponents([.hour, .minute], from: Date()))
-                }) {
-                    Label("Add Notification Time", systemImage: "plus.circle.fill")
-                        .foregroundColor(.accentColor)
-                }
-            }
-            .alert("Invalid Input", isPresented: $showAlert) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Please enter a number between 1 and 100")
             }
         }
     }

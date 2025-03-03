@@ -142,6 +142,7 @@ struct ActivityRow: View {
             }
 
             let streak = activity.calculateStreak()
+            // print("Streak for \(activity.name): \(streak)")
             if streak > 1 {
                 GeometryReader { geometry in
                     HStack(spacing: 1) {

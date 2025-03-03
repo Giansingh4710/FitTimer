@@ -56,12 +56,13 @@ class WorkoutPlan {
 
         var currentStreak = 0
         let calendar = Calendar.current
-        var lastDate = calendar.startOfDay(for: Date())
+        var lastDate = calendar.startOfDay(for: completedHistory.last!)
 
-        for dateItem in completedHistory {
+        for dateItem in completedHistory.reversed() {
             let historyDate = calendar.startOfDay(for: dateItem)
             let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
-            if daysBetween == -1 || daysBetween == 0 {
+
+            if daysBetween == 1 || daysBetween == 0 {
                 currentStreak += 1
                 lastDate = historyDate
             } else {
@@ -76,28 +77,24 @@ class WorkoutPlan {
         guard !completedHistory.isEmpty else { return 0 }
 
         var longestStreak = 0
-        var currentStreak = 0
+        var currentStreak = 1
         let calendar = Calendar.current
-        var lastDate = calendar.startOfDay(for: Date())
+        var lastDate = calendar.startOfDay(for: completedHistory.last!)
 
-        for dateItem in completedHistory {
+        for dateItem in completedHistory.dropFirst() {
             let historyDate = calendar.startOfDay(for: dateItem)
             let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
-            if daysBetween == -1 || daysBetween == 0 {
+
+            if daysBetween == 1 {
                 currentStreak += 1
             } else {
-                if currentStreak > longestStreak {
-                    longestStreak = currentStreak
-                }
-                currentStreak = 0
+                longestStreak = max(longestStreak, currentStreak)
+                currentStreak = 1 // Reset to 1, because the new streak starts with this entry
             }
             lastDate = historyDate
         }
 
-        if currentStreak > longestStreak {
-            longestStreak = currentStreak
-        }
-
+        longestStreak = max(longestStreak, currentStreak)
         return longestStreak
     }
 
@@ -169,12 +166,12 @@ class Activity {
             if todayCount != 0 {
                 history.append(ActivityHistory(count: todayCount, date: lastCounted))
             }
+            todayCount = 0
 
             if resetDaily {
                 count = 0
+                lastCounted = Date()
             }
-            lastCounted = Date()
-            todayCount = 0
         }
     }
 
@@ -199,22 +196,24 @@ class Activity {
 
     func calculateStreak() -> Int {
         guard !history.isEmpty else { return 0 }
-
-        var currentStreak = 0
         let calendar = Calendar.current
-        var lastDate = calendar.startOfDay(for: Date())
+        var currentStreak = 0
 
-        for historyItem in history {
+        var lastDate = calendar.startOfDay(for: history.last!.date)
+
+        for historyItem in history.reversed() {
             let historyDate = calendar.startOfDay(for: historyItem.date)
             let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
-            if daysBetween == -1 {
+
+            if daysBetween == 1 || daysBetween == 0 {
                 currentStreak += 1
                 lastDate = historyDate
             } else {
-                break
+                break // Stop counting if there's a gap
             }
         }
 
+        print("Streak for \(name): \(currentStreak)")
         return currentStreak
     }
 
@@ -222,28 +221,27 @@ class Activity {
         guard !history.isEmpty else { return 0 }
 
         var longestStreak = 0
-        var currentStreak = 0
+        var currentStreak = 1 // Start at 1 since the first entry is always a streak of 1
         let calendar = Calendar.current
-        var lastDate = calendar.startOfDay(for: Date())
 
-        for historyItem in history {
+        // Start from the earliest recorded date
+        var lastDate = calendar.startOfDay(for: history.first!.date)
+
+        for historyItem in history.dropFirst() {
             let historyDate = calendar.startOfDay(for: historyItem.date)
-            let daysBetween = calendar.dateComponents([.day], from: historyDate, to: lastDate).day ?? 0
-            if daysBetween == -1 {
+            let daysBetween = calendar.dateComponents([.day], from: lastDate, to: historyDate).day ?? 0
+
+            if daysBetween == 1 {
                 currentStreak += 1
             } else {
-                if currentStreak > longestStreak {
-                    longestStreak = currentStreak
-                }
-                currentStreak = 0
+                longestStreak = max(longestStreak, currentStreak)
+                currentStreak = 1 // Reset to 1, because the new streak starts with this entry
             }
+
             lastDate = historyDate
         }
 
-        if currentStreak > longestStreak {
-            longestStreak = currentStreak
-        }
-
+        longestStreak = max(longestStreak, currentStreak)
         return longestStreak
     }
 }

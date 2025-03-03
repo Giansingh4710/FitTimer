@@ -35,7 +35,7 @@ struct ListOfWorkouts: View {
                     }
 
                     let streak = plan.calculateStreak()
-                    if streak > -1 {
+                    if streak > 1 {
                         GeometryReader { geometry in
                             HStack(spacing: 1) {
                                 Text("🔥")

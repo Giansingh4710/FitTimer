@@ -1,6 +1,11 @@
 
 FitTimer:
 
+
+
+
+
+
 Done:
 - UUID replace csv. Importing fixed and works fin
 - Swipe right to input count don't work sometimes (didn't work but added input in detaiulsview)

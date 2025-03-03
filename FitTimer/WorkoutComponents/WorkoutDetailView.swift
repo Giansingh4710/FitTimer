@@ -19,7 +19,7 @@ struct WorkoutDetailView: View {
             HStack(spacing: 8) {
                 Text("\(plan.completedHistory.count) workouts completed")
                 Text("•")
-                Text("Longest 🔥: \(plan.getLongestStreak())")
+                Text("Longest Streak: \(plan.getLongestStreak())")
             }
             .font(.system(.caption, design: .rounded))
             .foregroundColor(.secondary)
@@ -153,9 +153,7 @@ struct WorkoutEditorView: View {
                     DisclosureGroup("Workout History: \(draftHistory.count)") {
                         ForEach(draftHistory, id: \.self) { entry in
                             HStack {
-                                Text(entry, style: .date)
-                                // Spacer()
-                                // Text("Count: \(entry.count)") .bold()
+                                Text(entry.formatted(date: .abbreviated, time: .shortened))
                             }
                             .font(.subheadline)
                         }

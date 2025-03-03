@@ -16,7 +16,6 @@ struct SettingsView: View {
 
     @State private var importObj: ImportObject? = nil // obj that has list of items to be imported from CSV file
 
-
     var body: some View {
         List {
             Section("Workouts") {
@@ -93,13 +92,22 @@ struct SettingsView: View {
         return components
     }
 
+    private func escapeCSVField(_ field: String) -> String {
+        var escaped = field.replacingOccurrences(of: "\"", with: "\"\"") // Escape double quotes
+        if escaped.contains(",") || escaped.contains("\n") || escaped.contains(";") {
+            escaped = "\"\(escaped)\"" // Wrap in quotes if it contains special characters
+        }
+        return escaped
+    }
+
     private func exportWorkoutsCSV() -> String {
         var csv = "id,createdAt,completedHistory,name,notifications,exercises,notificationText"
         for workout in the_workouts {
             let notifications = workout.notifications.map { dateComponentsToString($0) }.joined(separator: ";")
             let completedHistory = workout.completedHistory.map { dateToUnix($0) }.sorted().map { String($0) }.joined(separator: ";")
             let exercises = workout.exercises.map { "\($0.name)#\($0.duration)#\($0.rest)" }.joined(separator: ";")
-            let notificationText = workout.notificationText.title + ";" + workout.notificationText.body
+
+            let notificationText = escapeCSVField(workout.notificationText.title + ";" + workout.notificationText.body)
 
             csv += "\n\(workout.id.uuidString),\(dateToUnix(workout.createdAt)),\(completedHistory),\(workout.name),\(notifications),\(exercises),\(notificationText)"
         }
@@ -181,7 +189,7 @@ struct SettingsView: View {
                 .map { "\($0.0)#\($0.1)" } // Convert back to string format
                 .joined(separator: ";") // Join with semicolon
 
-            let notificationText = activity.notificationText.title + ";" + activity.notificationText.body
+            let notificationText = escapeCSVField(activity.notificationText.title + ";" + activity.notificationText.body)
             csv += "\n\(activity.id.uuidString),\(activity.name),\(activity.count),\(notificationsStr),\(activity.resetDaily),\(dateToUnix(activity.createdAt)),\(sortedHistoryStr),\(notificationText)"
             if activity.todayCount != 0 {
                 activity.history.removeLast()

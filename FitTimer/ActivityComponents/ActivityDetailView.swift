@@ -19,6 +19,8 @@ struct ActivityDetailView: View {
     @State private var showInputAlert = false
     @State private var addToCount = ""
 
+    @State private var activity_history_order: Bool = false
+    @Environment(\.modelContext) var modelContext
     var body: some View {
         NavigationView {
             List {
@@ -124,9 +126,12 @@ struct ActivityDetailView: View {
                 Section {
                     if activity.history.count > 0 {
                         DisclosureGroup("Activity History: \(activity.history.count)") {
-                            ForEach(activity.history, id: \.date) { entry in
+                            Toggle("Reverse", isOn: $activity_history_order)
+
+                            ForEach(activity_history_order ? activity.history.reversed() : activity.history, id: \.date) { entry in
                                 HStack {
-                                    Text(entry.date, style: .date)
+                                    // Text(entry.date, style: .date)
+                                    Text(entry.date.formatted(date: .abbreviated, time: .shortened))
                                     Spacer()
                                     Text("Count: \(entry.count)")
                                         .bold()
@@ -208,6 +213,7 @@ struct ActivityDetailView: View {
         }
         activity.notificationText = notificationText
         activity.notificationsOff = notificationsOff
+        try? modelContext.save()
         dismiss()
     }
 

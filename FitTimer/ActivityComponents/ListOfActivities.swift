@@ -79,29 +79,25 @@ struct ListOfActivities: View {
                 showDeleteAlert = false
             })
         }
-        .alert("How many did you do? (doesn't work sometimes)", isPresented: $showInputAlert) {
+        .alert("Add Count", isPresented: $showInputAlert) {
             if let activity = swipedRightOnActivity {
-                TextField("5", text: $addToCount).keyboardType(.numbersAndPunctuation)
+                TextField("Enter count", text: $addToCount).keyboardType(.numbersAndPunctuation)
                 Button("Add") {
-                    print("before increment function for \(activity.name)") // Debug
                     incrementCount(for: activity)
                 }
                 Button("Cancel", role: .cancel, action: { addToCount = "" })
             } else {
-                Text("Something went wrong. Activity not found").foregroundColor(.red)
-                Button("Cancel", role: .cancel, action: { addToCount = "" })
+                Text("Unable to find activity. Please try again.")
+                Button("OK", role: .cancel, action: { addToCount = "" })
             }
         }
     }
 
     private func incrementCount(for activity: Activity) {
-        print("Incrementing count for \(activity.name)")
-        guard let incrementBy = Int(addToCount) else {
+        guard let incrementBy = Int(addToCount), incrementBy > 0 else {
             print("Invalid input: \(addToCount)")
             return
         }
-
-        print("Adding \(incrementBy) to \(activity.name) from input \(addToCount)")
 
         if activity.isNewDay() {
             activity.updateIfNewDay()

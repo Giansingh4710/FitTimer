@@ -20,24 +20,31 @@ struct SettingsView: View {
         List {
             Section("Workouts") {
                 Button("Import Workout Plans") {
-                    showImport = true
                     importType = .workout_plans
+                    DispatchQueue.main.async {
+                        showImport = true
+                    }
                 }
                 Button("Export Workout Plans") {
                     exportType = .workout_plans
-                    showExport = true
+                    DispatchQueue.main.async {
+                        showExport = true
+                    }
                 }
             }
 
             Section("Activities") {
                 Button("Import Activities") {
-                    // showingActivityImporter = true
-                    showImport = true
                     importType = .activities
+                    DispatchQueue.main.async {
+                        showImport = true
+                    }
                 }
                 Button("Export Activities") {
                     exportType = .activities
-                    showExport = true
+                    DispatchQueue.main.async {
+                        showExport = true
+                    }
                 }
             }
         }
@@ -56,26 +63,42 @@ struct SettingsView: View {
                 }
             ))
         }
-        .fileImporter(isPresented: $showImport, allowedContentTypes: [UTType.commaSeparatedText]) { result in
+        .fileImporter(
+            isPresented: $showImport,
+            allowedContentTypes: [UTType.commaSeparatedText],
+            allowsMultipleSelection: false
+        ) { result in
             switch result {
-            case let .success(file):
+            case .success(let files):
+                guard let file = files.first else {
+                    showError = true
+                    errorMessage = "No file was selected"
+                    return
+                }
                 if importType == .workout_plans {
                     importWorkouts(from: file)
                 } else if importType == .activities {
                     importActivities(from: file)
                 }
-            case let .failure(error):
-                print(error.localizedDescription)
+            case .failure(let error):
+                showError = true
+                errorMessage = "Error selecting file: \(error.localizedDescription)"
             }
         }
-        .fileExporter(isPresented: $showExport,
-                      document: exportType == .workout_plans ?
-                          CSVFile(initialText: exportWorkoutsCSV()) :
-                          CSVFile(initialText: exportActivitiesCSV()),
-                      contentType: .commaSeparatedText, defaultFilename: exportType == .workout_plans ? "workouts.csv" : "activities.csv")
-        { result in
-            if case .success = result {
+        .fileExporter(
+            isPresented: $showExport,
+            document: exportType == .workout_plans ?
+                CSVFile(initialText: exportWorkoutsCSV()) :
+                CSVFile(initialText: exportActivitiesCSV()),
+            contentType: .commaSeparatedText,
+            defaultFilename: exportType == .workout_plans ? "workouts.csv" : "activities.csv"
+        ) { result in
+            switch result {
+            case .success:
                 print("Saved successfully")
+            case .failure(let error):
+                showError = true
+                errorMessage = "Error saving file: \(error.localizedDescription)"
             }
         }
     }
@@ -115,7 +138,11 @@ struct SettingsView: View {
     }
 
     private func importWorkouts(from url: URL) {
-        guard url.startAccessingSecurityScopedResource() else { return }
+        guard url.startAccessingSecurityScopedResource() else {
+            showError = true
+            errorMessage = "Could not access the selected file. Please try again."
+            return
+        }
         defer { url.stopAccessingSecurityScopedResource() }
 
         do {
@@ -127,20 +154,18 @@ struct SettingsView: View {
                 return
             }
 
-            importObj = ImportObject(type: "workouts", items: [])
+            var items: [ImportItemType] = []
             for (index, row) in rows.enumerated() {
                 let cols = row.components(separatedBy: ",")
                 if index == 0 {
                     if cols.count < 7 {
                         showError = true
                         errorMessage = "Invalid CSV. Expected at least 7 columns but got \(cols.count) cols in row \(index + 1).\n Got: \(row)"
-                        importObj = nil
                         return
                     }
                     if cols[0] != "id" || cols[1] != "createdAt" || cols[2] != "completedHistory" || cols[3] != "name" || cols[4] != "notifications" || cols[5] != "exercises" || cols[6] != "notificationText" {
                         showError = true
-                        errorMessage = "Wrong Header Row. Expected Name,CreatedAt,Notifications,CompletedHistory,Exercises"
-                        importObj = nil
+                        errorMessage = "Wrong Header Row. Expected id,createdAt,completedHistory,name,notifications,exercises,notificationText"
                         return
                     }
                     continue
@@ -148,31 +173,63 @@ struct SettingsView: View {
                 } else if cols.count < 6 {
                     showError = true
                     errorMessage = "Invalid CSV. Expected at least 6 columns but got \(cols.count) cols in row \(index + 1)"
-                    importObj = nil
                     return
                 }
 
-                let exercises = cols[5].split(separator: ";").map { exerciseStr -> Exercise in
-                    let parts = exerciseStr.split(separator: "#")
-                    return Exercise(name: String(parts[0]), duration: Int(parts[1]) ?? 0, rest: Int(parts[2]) ?? 0)
+                // Validate UUID
+                guard let _ = UUID(uuidString: cols[0]) else {
+                    showError = true
+                    errorMessage = "Invalid UUID format in row \(index + 1)"
+                    return
                 }
+
+                // Validate exercises
+                let exercises = cols[5].split(separator: ";").compactMap { exerciseStr -> Exercise? in
+                    let parts = exerciseStr.split(separator: "#")
+                    guard parts.count == 3,
+                          let duration = Int(parts[1]),
+                          let rest = Int(parts[2]) else {
+                        return nil
+                    }
+                    return Exercise(name: String(parts[0]), duration: duration, rest: rest)
+                }
+
+                if exercises.isEmpty {
+                    showError = true
+                    errorMessage = "No valid exercises found in row \(index + 1)"
+                    return
+                }
+
                 let notificationTextLst = cols[6] == "" ? ["", ""] : cols[6].split(separator: ";")
+                if notificationTextLst.count != 2 {
+                    showError = true
+                    errorMessage = "Invalid notification text format in row \(index + 1)"
+                    return
+                }
 
                 let workout = WorkoutPlan(
                     id: UUID(uuidString: cols[0]) ?? UUID(),
                     createdAt: unixToDate(cols[1]),
-                    completedHistory: cols[2] == "" ? [] : cols[2].split(separator: ";").map { unixToDate(String($0)) },
+                    completedHistory: cols[2] == "" ? [] : cols[2].split(separator: ";").compactMap { unixToDate(String($0)) },
                     name: cols[3],
-                    notifications: cols[4] == "" ? [] : cols[4].split(separator: ";").map { stringToDateComponents(String($0)) },
+                    notifications: cols[4] == "" ? [] : cols[4].split(separator: ";").compactMap { stringToDateComponents(String($0)) },
                     exercises: exercises,
                     notificationText: NotificationTextData(title: String(notificationTextLst[0]), body: String(notificationTextLst[1]))
                 )
-                importObj?.items.append(.workoutPlan(workout))
+                items.append(.workoutPlan(workout))
             }
+
+            if items.isEmpty {
+                showError = true
+                errorMessage = "No valid workouts found in the CSV file"
+                return
+            }
+
+            importObj = ImportObject(type: "workouts", items: items)
 
         } catch {
             showError = true
-            errorMessage = error.localizedDescription
+            errorMessage = "Error reading file: \(error.localizedDescription)"
         }
     }
 

@@ -1,6 +1,8 @@
 
 FitTimer:
-
+- streaks add to attributes
+- keep screen on even on low battery or if sleep setting is set mode when on workout screen working out
+- Clicking on setting button gives error
 
 
 

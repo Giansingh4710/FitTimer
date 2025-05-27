@@ -23,45 +23,43 @@ struct ImportPreviewView: View {
     @State private var currentIndex = 0
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var isProcessing = false
 
     @State private var currentItem: ImportItemType = .activity(Activity(name: ""))
 
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                Text("\(currentIndex + 1)/\(importObject.items.count) \(importObject.type)")
-                    .font(.headline)
+                if importObject.items.isEmpty {
+                    Text("No items to import")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("\(currentIndex + 1)/\(importObject.items.count) \(importObject.type)")
+                        .font(.headline)
 
-                switch currentItem {
-                case .activity:
-                    ActivityDetailsViewForImport(item: $currentItem)
-                case .workoutPlan:
-                    WorkoutPlanDetailsViewForImport(item: $currentItem)
-                }
-
-                HStack(spacing: 20) {
-                    Button("Skip") {
-                        moveToNext()
+                    switch currentItem {
+                    case .activity:
+                        ActivityDetailsViewForImport(item: $currentItem)
+                    case .workoutPlan:
+                        WorkoutPlanDetailsViewForImport(item: $currentItem)
                     }
-                    .buttonStyle(.bordered)
 
-                    Button("Import") {
-                        switch currentItem {
-                        case let .activity(act):
-                            if idIsUnique(activity: act) {
-                                act.history = act.history.sorted { $0.date < $1.date }
-                                modelContext.insert(act)
-                                moveToNext()
-                            }
-                        case let .workoutPlan(plan):
-                            if idIsUnique(plan: plan) {
-                                plan.completedHistory = plan.completedHistory.sorted { $0 < $1 }
-                                modelContext.insert(plan)
-                                moveToNext()
+                    HStack(spacing: 20) {
+                        Button("Skip") {
+                            moveToNext()
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isProcessing)
+
+                        Button("Import") {
+                            Task {
+                                await importCurrentItem()
                             }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isProcessing)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
             }
             .padding()
@@ -71,6 +69,7 @@ struct ImportPreviewView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .disabled(isProcessing)
                 }
             }
             .alert("Error", isPresented: $showError) {
@@ -78,9 +77,39 @@ struct ImportPreviewView: View {
             } message: {
                 Text(errorMessage)
             }
+            .overlay {
+                if isProcessing {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.black.opacity(0.2))
+                }
+            }
         }
         .onAppear {
-            currentItem = importObject.items[currentIndex]
+            if !importObject.items.isEmpty {
+                currentItem = importObject.items[currentIndex]
+            }
+        }
+    }
+
+    private func importCurrentItem() async {
+        isProcessing = true
+        defer { isProcessing = false }
+
+        switch currentItem {
+        case let .activity(act):
+            if idIsUnique(activity: act) {
+                act.history = act.history.sorted { $0.date < $1.date }
+                modelContext.insert(act)
+                moveToNext()
+            }
+        case let .workoutPlan(plan):
+            if idIsUnique(plan: plan) {
+                plan.completedHistory = plan.completedHistory.sorted { $0 < $1 }
+                modelContext.insert(plan)
+                moveToNext()
+            }
         }
     }
 

@@ -11,6 +11,9 @@ struct WorkoutInProgressView: View {
     @State private var timeLeftForCurrentRound = 0
     @State private var timer: Timer?
     private let speechSynthesizer = AVSpeechSynthesizer()
+    
+    // Add UIApplication reference
+    @Environment(\.scenePhase) private var scenePhase
 
     private var totalTimeRemaining: Int {
         var total = timeLeftForCurrentRound
@@ -87,9 +90,15 @@ struct WorkoutInProgressView: View {
                 }
             }
         }
-        .onAppear(perform: startWorkout)
+        .onAppear {
+            startWorkout()
+            // Keep screen on during workout
+            UIApplication.shared.isIdleTimerDisabled = true
+        }
         .onDisappear {
-            cancelWorkout()
+            cleanup()
+            // Allow screen to sleep again
+            UIApplication.shared.isIdleTimerDisabled = false
         }
     }
 
@@ -99,7 +108,6 @@ struct WorkoutInProgressView: View {
 
     private func startTimer(isInitialRest: Bool = false) {
         let exercise = plan.exercises[currentExerciseIndex]
-        // timeLeftForCurrentRound = isResting ? (isInitialRest ? 15 : exercise.rest) : exercise.duration
         timeLeftForCurrentRound = isResting ? exercise.rest : exercise.duration
 
         announce(isResting ?
@@ -151,9 +159,14 @@ struct WorkoutInProgressView: View {
         speechSynthesizer.speak(utterance)
     }
 
-    private func cancelWorkout() {
+    private func cleanup() {
         timer?.invalidate()
+        timer = nil
         speechSynthesizer.stopSpeaking(at: .immediate)
+    }
+
+    private func cancelWorkout() {
+        cleanup()
         onCancel()
     }
 
@@ -277,3 +290,4 @@ struct WorkoutTimerView: View {
         return String(format: "%d:%02d", minutes, remainingSeconds)
     }
 }
+
